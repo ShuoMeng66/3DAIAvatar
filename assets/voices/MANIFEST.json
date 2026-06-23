@@ -1,0 +1,127 @@
+{
+  "version": "1.0.0",
+  "description": "ElderTalk 声音素材清单",
+  "updated": "2026-06-23",
+  "default_voice": "cosyvoice_chinese_female",
+  "voices": {
+    "cosyvoice_chinese_female": {
+      "name": "中文女声（默认）",
+      "engine": "CosyVoice",
+      "model": "CosyVoice-300M",
+      "description": "阿里通义实验室预训练中文女声，温暖自然，适合陪聊场景",
+      "source": {
+        "type": "modelscope",
+        "repo": "iic/CosyVoice-300M",
+        "url": "https://www.modelscope.cn/models/iic/CosyVoice-300M",
+        "download": "pip install modelscope && python -c \"from modelscope import snapshot_download; snapshot_download('iic/CosyVoice-300M', local_dir='pretrained_models/CosyVoice-300M')\"",
+        "huggingface_mirror": "https://huggingface.co/FunAudioLLM/CosyVoice-300M",
+        "hf_download": "export HF_ENDPOINT=https://hf-mirror.com && huggingface-cli download FunAudioLLM/CosyVoice-300M --local-dir pretrained_models/CosyVoice-300M",
+        "license": "Apache 2.0（可商用）",
+        "model_size": "约 1.2GB"
+      },
+      "parameters": {
+        "speed": 0.9,
+        "pitch": 0,
+        "sample_rate": 22050,
+        "recommended_for": "默认陪聊、日常对话"
+      }
+    },
+    "cosyvoice_chinese_male": {
+      "name": "中文男声",
+      "engine": "CosyVoice",
+      "model": "CosyVoice-300M",
+      "description": "使用 CosyVoice 3秒克隆功能，从参考音频生成亲切男声",
+      "source": {
+        "type": "custom_clone",
+        "reference_audio": "assets/voices/reference/male_warm.wav",
+        "clone_method": "CosyVoice 3s zero-shot clone",
+        "reference_audio_requirements": "1-5 秒清晰中文男声，无背景噪音",
+        "license": "取决于参考音频来源"
+      },
+      "parameters": {
+        "speed": 0.9,
+        "pitch": -2,
+        "sample_rate": 22050,
+        "recommended_for": "男性老人陪聊、回忆往事"
+      }
+    },
+    "gpt_sovits_female": {
+      "name": "GPT-SoVITS 温柔女声",
+      "engine": "GPT-SoVITS",
+      "model": "GPT-SoVITS v2",
+      "description": "基于 GPT-SoVITS 微调的中文女声，高度自然",
+      "source": {
+        "type": "github",
+        "repo": "RVC-Boss/GPT-SoVITS",
+        "url": "https://github.com/RVC-Boss/GPT-SoVITS",
+        "pretrained_weights": "https://huggingface.co/lj1995/GPT-SoVITS",
+        "hf_download": "export HF_ENDPOINT=https://hf-mirror.com && huggingface-cli download lj1995/GPT-SoVITS --local-dir pretrained_models/GPT-SoVITS",
+        "license": "MIT（可商用）",
+        "model_size": "约 3GB"
+      },
+      "training": {
+        "reference_audio": "assets/voices/reference/female_gentle_1min.wav",
+        "min_duration": "1 分钟清晰中文语音",
+        "training_time": "约 30 分钟（RTX 3060）",
+        "output": "assets/voices/gpt_sovits_female/"
+      },
+      "parameters": {
+        "speed": 0.85,
+        "recommended_for": "温柔陪聊、夜间模式、情感安慰"
+      }
+    },
+    "edge_tts_female": {
+      "name": "Edge TTS 中文女声（备用）",
+      "engine": "Edge TTS",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "description": "微软 Edge 免费 TTS，无需 GPU，作为快速备用方案",
+      "source": {
+        "type": "pip",
+        "install": "pip install edge-tts",
+        "license": "免费用于非商业用途",
+        "model_size": "无需下载（云端）"
+      },
+      "parameters": {
+        "speed": "-10%",
+        "pitch": "+0Hz",
+        "recommended_for": "快速测试、无 GPU 环境"
+      }
+    }
+  },
+  "reference_audio": {
+    "female_gentle": {
+      "file": "assets/voices/reference/female_gentle_1min.wav",
+      "description": "温柔女声参考音频，用于 GPT-SoVITS 微调",
+      "requirements": "1 分钟以上，清晰无噪音，语速适中偏慢，温柔亲切语气",
+      "source_hint": "可从公开演讲/播客截取，或自行录制"
+    },
+    "male_warm": {
+      "file": "assets/voices/reference/male_warm.wav",
+      "description": "亲切男声参考音频，用于 CosyVoice 3秒克隆",
+      "requirements": "1-5 秒清晰男声，语气温暖",
+      "source_hint": "可从公开广播/有声书截取，或自行录制"
+    },
+    "young_female": {
+      "file": "assets/voices/reference/young_female.wav",
+      "description": "年轻女声参考音频（孙女角色）",
+      "requirements": "1-5 秒清晰女声，语气活泼自然",
+      "source_hint": "可从公开影视片段截取，或自行录制"
+    }
+  },
+  "download_instructions": {
+    "cosyvoice": "pip install modelscope && python -c \"from modelscope import snapshot_download; snapshot_download('iic/CosyVoice-300M', local_dir='pretrained_models/CosyVoice-300M')\"",
+    "gpt_sovits": "git clone https://github.com/RVC-Boss/GPT-SoVITS.git && cd GPT-SoVITS && pip install -r requirements.txt",
+    "edge_tts": "pip install edge-tts"
+  },
+  "voice_clone": {
+    "description": "家属上传录音 → 自动微调 → 生成家人声音",
+    "endpoint": "POST /api/v1/voice/clone",
+    "pipeline": [
+      "1. 前端上传 1 分钟录音 (WAV, 16kHz, 单声道)",
+      "2. 后端 audio_preprocess: 去噪、VAD 切分、响度归一化",
+      "3. CosyVoice 3秒克隆 或 GPT-SoVITS 微调",
+      "4. 生成 voice_id → 存入 assets/voices/custom/{voice_id}/",
+      "5. 返回 voice_id → 前端可选择使用"
+    ]
+  }
+}

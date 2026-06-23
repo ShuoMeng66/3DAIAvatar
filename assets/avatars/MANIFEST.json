@@ -1,0 +1,116 @@
+{
+  "version": "1.0.0",
+  "description": "ElderTalk 数字人形象素材清单",
+  "updated": "2026-06-23",
+  "avatars": {
+    "grandma_warm": {
+      "name": "慈祥奶奶",
+      "role": "default_avatar",
+      "description": "温暖慈祥的老年女性形象，适合作为默认陪聊角色",
+      "source": {
+        "type": "pixabay",
+        "url": "https://pixabay.com/photos/search/elderly%20woman%20smile/",
+        "search_keywords": "elderly woman smile portrait warm",
+        "license": "Pixabay Content License（免费可商用，无需署名）",
+        "note": "在 Pixabay 搜索 elderly woman smiling portrait，选择正面半身照，512x512 以上"
+      },
+      "preprocessing": {
+        "tool": "sadtalker / musetalk",
+        "steps": [
+          "原始图片调整为 512x512 正方形",
+          "人脸检测 + 对齐 → 裁剪到面部区域",
+          "rembg 去背景（可选，全息屏黑底）",
+          "SadTalker 预处理：生成 3DMM 参数 + 关键点缓存",
+          "MuseTalk 预处理：生成 face embedding 缓存"
+        ],
+        "cached_files": [
+          "grandma_warm.png",
+          "grandma_warm_face_512.png",
+          "grandma_warm_muse.npy",
+          "grandma_warm_sadtalker.pkl"
+        ]
+      },
+      "emotion_variants": {
+        "smile": "微笑表情变体",
+        "concerned": "关心表情变体",
+        "listening": "倾听表情变体"
+      },
+      "recommended_scene": "默认陪聊、日常问候、天气预报"
+    },
+    "grandpa_kind": {
+      "name": "慈祥爷爷",
+      "role": "alternate_avatar",
+      "description": "慈祥的老年男性形象，适合男性老人用户",
+      "source": {
+        "type": "pixabay",
+        "url": "https://pixabay.com/photos/search/elderly%20man%20smile/",
+        "search_keywords": "elderly man smile portrait kind",
+        "license": "Pixabay Content License（免费可商用，无需署名）",
+        "note": "在 Pixabay 搜索 elderly man smiling portrait，选择正面照"
+      },
+      "preprocessing": {
+        "tool": "sadtalker / musetalk",
+        "steps": [
+          "同 grandma_warm 预处理流程"
+        ]
+      },
+      "recommended_scene": "陪聊、回忆往事"
+    },
+    "young_girl": {
+      "name": "孙女小暖",
+      "role": "companion_avatar",
+      "description": "年轻女性形象，扮演孙女/志愿者的陪聊角色",
+      "source": {
+        "type": "pixabay",
+        "url": "https://pixabay.com/photos/search/young%20woman%20smile%20portrait/",
+        "search_keywords": "young woman smile portrait friendly warm",
+        "license": "Pixabay Content License（免费可商用，无需署名）",
+        "note": "在 Pixabay 搜索 young woman friendly smile portrait，选择自然光正面照"
+      },
+      "preprocessing": {
+        "tool": "sadtalker / musetalk",
+        "steps": [
+          "同 grandma_warm 预处理流程"
+        ]
+      },
+      "recommended_scene": "活跃陪聊、老歌话题、日常生活"
+    },
+    "caregiver": {
+      "name": "护工志愿者",
+      "role": "care_avatar",
+      "description": "专业温暖的护工/社区志愿者形象",
+      "source": {
+        "type": "pixabay",
+        "url": "https://pixabay.com/photos/search/nurse%20smile%20portrait/",
+        "search_keywords": "nurse caregiver smile portrait professional",
+        "license": "Pixabay Content License（免费可商用，无需署名）",
+        "note": "在 Pixabay 搜索 nurse caregiver smile，选择正面照"
+      },
+      "preprocessing": {
+        "tool": "sadtalker / musetalk",
+        "steps": [
+          "同 grandma_warm 预处理流程"
+        ]
+      },
+      "recommended_scene": "健康提醒、吃药提醒、身体关心"
+    }
+  },
+  "download_instructions": {
+    "step1": "访问 https://pixabay.com/zh/",
+    "step2": "搜索上述 keywords",
+    "step3": "筛选：方向=竖版，尺寸=中及以上",
+    "step4": "下载图片，重命名为对应角色名，放入 assets/avatars/{role}/",
+    "step5": "运行预处理脚本生成缓存文件",
+    "step6": "删除本文件中的 download_instructions 字段"
+  },
+  "preprocessing_script": "cd backend && python scripts/preprocess_avatar.py --input assets/avatars/{role}/source.jpg --output assets/avatars/{role}/",
+  "quality_checklist": [
+    "正面或微侧面（偏转 < 30°）",
+    "光线均匀，无强烈阴影",
+    "表情自然微笑，嘴闭合",
+    "分辨率 ≥ 512×512",
+    "背景简洁或可去除",
+    "无眼镜反光",
+    "无夸张妆容"
+  ]
+}

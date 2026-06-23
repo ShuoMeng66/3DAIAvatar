@@ -1,0 +1,82 @@
+/* ============================================================
+ * ElderTalk 待机动画
+ * 纯 CSS 动画，无需额外依赖
+ * ============================================================ */
+
+/* 待机呼吸动画 - 头像轻微缩放 */
+@keyframes idleBreathing {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.animate-idle {
+  animation: idleBreathing 4s ease-in-out infinite;
+}
+
+/* 眨眼动画 - 每 4 秒眨眼一次 */
+@keyframes idleBlink {
+  0%, 96%, 100% { transform: scaleY(1); }
+  97%, 99% { transform: scaleY(0.1); }
+}
+
+.animate-blink {
+  animation: idleBlink 4s ease-in-out infinite;
+}
+
+/* 倾听状态脉冲光环 */
+@keyframes listeningPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(255, 149, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 149, 0, 0);
+  }
+}
+
+.animate-listening {
+  animation: listeningPulse 1.5s ease-out infinite;
+}
+
+/* 说话状态口型闪烁 */
+@keyframes speakingGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(255, 149, 0, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(255, 149, 0, 0.5); }
+}
+
+.animate-speaking {
+  animation: speakingGlow 0.5s ease-in-out infinite;
+}
+
+/* 打断过渡动画 */
+@keyframes interruptFadeOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.5; transform: scale(0.95); }
+}
+
+.animate-interrupting {
+  animation: interruptFadeOut 0.3s ease-out forwards;
+}
+
+/* 思考状态旋转 */
+@keyframes thinkingSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-thinking .thinking-indicator {
+  animation: thinkingSpin 1s linear infinite;
+}
+
+/* 全息屏亮暗过渡 */
+@keyframes hologramGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.05); }
+}
+
+.animate-hologram {
+  animation: hologramGlow 3s ease-in-out infinite;
+}

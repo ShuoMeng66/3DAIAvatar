@@ -1,0 +1,59 @@
+{
+  "version": "1.0.0",
+  "description": "ElderTalk 动画素材清单",
+  "updated": "2026-06-23",
+  "animations": {
+    "idle_breathing": {
+      "name": "待机呼吸动画",
+      "type": "css_animation",
+      "description": "头像轻微缩放呼吸效果，用于非对话时的待机状态",
+      "source": "内置 CSS 动画",
+      "implementation": "assets/animations/idle_breathing.css",
+      "usage": "在 AvatarPlayer 组件中应用 className='animate-idle'",
+      "css_code": "@keyframes idleBreathing { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } } .animate-idle { animation: idleBreathing 4s ease-in-out infinite; }"
+    },
+    "idle_blink": {
+      "name": "眨眼动画",
+      "type": "css_animation",
+      "description": "模拟眨眼效果，每 3-5 秒眨眼一次",
+      "source": "内置 CSS 动画",
+      "implementation": "assets/animations/idle_blink.css",
+      "usage": "叠加在头像眼部遮罩上",
+      "note": "使用 SadTalker 时自动处理眨眼，此 CSS 为纯前端 fallback"
+    },
+    "greeting_wave": {
+      "name": "打招呼挥手",
+      "type": "lottie",
+      "description": "挥手打招呼动画，用于空闲问候时触发",
+      "source": {
+        "type": "lottiefiles_free",
+        "url": "https://lottiefiles.com/search?q=hello+wave&type=free",
+        "search_keywords": "hello wave greeting",
+        "license": "LottieFiles Free License（免费使用）",
+        "note": "在 LottieFiles 搜索 free hello wave animation，下载 JSON 格式"
+      },
+      "file": "assets/animations/greeting_wave.json",
+      "usage": "import greetingWave from '@/assets/animations/greeting_wave.json'; <Lottie animationData={greetingWave} />"
+    },
+    "listening_pulse": {
+      "name": "倾听脉冲动画",
+      "type": "css_animation",
+      "description": "头像周围脉冲光环，表示正在倾听",
+      "source": "内置 CSS 动画",
+      "implementation": "assets/animations/listening_pulse.css",
+      "css_code": "@keyframes listeningPulse { 0% { box-shadow: 0 0 0 0 rgba(255,149,0,0.4); } 70% { box-shadow: 0 0 0 20px rgba(255,149,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,149,0,0); } } .animate-listening { animation: listeningPulse 1.5s infinite; }"
+    },
+    "nodding": {
+      "name": "轻微点头",
+      "type": "sadtalker",
+      "description": "SadTalker 驱动点头动画，用于全息屏待机场景",
+      "source": "SadTalker 内置",
+      "implementation": "使用 SadTalker 的 pose_style 参数控制点头幅度",
+      "note": "需要 GPU 运行 SadTalker，全息屏建议默认开启"
+    }
+  },
+  "download_instructions": {
+    "lottie": "访问 https://lottiefiles.com/search?q=hello+wave&type=free → 下载免费动画 JSON → 放入 assets/animations/",
+    "css": "CSS 动画已内置，无需额外下载"
+  }
+}
