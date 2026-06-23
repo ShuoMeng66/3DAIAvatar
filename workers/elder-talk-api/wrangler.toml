@@ -2,10 +2,5 @@ name = "elder-talk-api"
 main = "src/index.ts"
 compatibility_date = "2025-06-23"
 
-# 绑定百炼 API Key（通过 Cloudflare Dashboard 设置 Secret）
-# 或在终端执行: wrangler secret put DASHSCOPE_API_KEY
-[vars]
-DASHSCOPE_API_KEY = ""
-
-[[dns]]
-# 部署后自定义域名（可选），访问 https://elder-talk-api.YOUR-SUBDOMAIN.workers.dev
+# API Key 使用 Secret 存储（已在 Cloudflare Dashboard 设置）
+# 终端执行: npx wrangler secret put DASHSCOPE_API_KEY

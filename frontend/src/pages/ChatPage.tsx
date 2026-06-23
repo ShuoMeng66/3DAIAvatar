@@ -9,7 +9,10 @@ import { useConversationState, STATE_LABELS } from '../hooks/useConversationStat
 import { useVAD } from '../hooks/useVAD';
 import { triggerInterrupt } from '../services/bargein';
 import { chatText, uploadAudio } from '../services/api';
-import { Send, Circle } from 'lucide-react';
+import { Send, Circle, Heart } from 'lucide-react';
+
+// 生产模式（GitHub Pages + Cloudflare Worker）无 WebRTC 视频流
+const IS_PRODUCTION = !import.meta.env.DEV;
 
 export default function ChatPage() {
   const [inputText, setInputText] = useState('');
@@ -19,8 +22,10 @@ export default function ChatPage() {
   ]);
   const [isRecording, setIsRecording] = useState(false);
 
-  const { videoRef, connectionState } = useWebRTC();
   const convState = useConversationState();
+
+  // 开发模式使用 WebRTC，生产模式用静态形象
+  const { videoRef, connectionState } = useWebRTC();
 
   // VAD 语音活动检测（在 SPEAKING 状态下持续监听打断）
   const vad = useVAD({
@@ -165,9 +170,20 @@ export default function ChatPage() {
         </span>
       </div>
 
-      {/* 视频区 60% */}
-      <div className="flex-1 flex items-center justify-center bg-black rounded-2xl mx-4 mt-1 overflow-hidden" style={{ minHeight: '55%' }}>
-        <AvatarPlayer videoRef={videoRef} connectionState={connectionState} />
+      {/* 数字人/形象区 60% */}
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-amber-50 to-orange-100 rounded-2xl mx-4 mt-1 overflow-hidden" style={{ minHeight: '55%' }}>
+        {IS_PRODUCTION ? (
+          /* 生产模式：静态虚拟形象（无 WebRTC） */
+          <div className="flex flex-col items-center justify-center w-full h-full">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-lg mb-4">
+              <Heart size={64} className="text-white" fill="white" />
+            </div>
+            <p className="text-2xl font-bold text-warm-text">小暖</p>
+            <p className="text-base text-warm-text-light mt-1">您的暖心陪聊助手</p>
+          </div>
+        ) : (
+          <AvatarPlayer videoRef={videoRef} connectionState={connectionState} />
+        )}
       </div>
       
       {/* 字幕栏 */}
