@@ -1,7 +1,7 @@
 # ElderTalk — 虚拟真人陪聊 Web 应用
 
 基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) 实时数字人技术，面向独居/空巢老人群体的智能陪聊系统。
-
+快速体验: https://shuomeng66.github.io/3DAIAvatar/
 ## 功能概览
 
 - 🎤 **语音交互**：老人通过语音与数字人自然对话，无需打字
