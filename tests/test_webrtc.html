@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElderTalk WebRTC 连接测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #FFF8F0;
+            color: #3D2C0A;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #F59E0B;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #E5E0D8;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #F59E0B;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #F59E0B;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 8px;
+        }
+        button:hover { background: #D97706; }
+        button:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .status.pending { background: #FEF3C7; color: #92400E; }
+        .status.success { background: #D1FAE5; color: #065F46; }
+        .status.error { background: #FEE2E2; color: #991B1B; }
+        .log {
+            margin-top: 16px;
+            background: #1E293B;
+            color: #E2E8F0;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .video-container {
+            margin-top: 16px;
+            width: 100%;
+            aspect-ratio: 1;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ElderTalk WebRTC 测试</h1>
+        <p class="subtitle">测试与后端 /offer 端点的 WebRTC 连接</p>
+
+        <div class="form-group">
+            <label for="serverUrl">后端地址</label>
+            <input type="text" id="serverUrl" value="http://localhost:8010" placeholder="http://localhost:8010">
+        </div>
+
+        <div id="status" class="status pending">就绪：点击按钮开始测试</div>
+
+        <button id="healthBtn" onclick="testHealth()">1. 测试 /health</button>
+        <button id="offerBtn" onclick="testOffer()" disabled>2. 测试 /offer (WebRTC)</button>
+
+        <div class="video-container" id="videoContainer" style="display:none;">
+            <video id="remoteVideo" autoplay playsinline muted></video>
+        </div>
+
+        <div class="log" id="log">等待测试...</div>
+    </div>
+
+    <script>
+        const serverUrl = () => document.getElementById('serverUrl').value;
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
+        const healthBtn = document.getElementById('healthBtn');
+        const offerBtn = document.getElementById('offerBtn');
+        const videoContainer = document.getElementById('videoContainer');
+        const remoteVideo = document.getElementById('remoteVideo');
+
+        let pc = null;
+
+        function setStatus(text, type) {
+            statusEl.textContent = text;
+            statusEl.className = 'status ' + type;
+        }
+
+        function addLog(text) {
+            logEl.textContent += new Date().toLocaleTimeString() + ' - ' + text + '\n';
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        async function testHealth() {
+            addLog('测试 /health 端点...');
+            healthBtn.disabled = true;
+            try {
+                const resp = await fetch(serverUrl() + '/health');
+                const data = await resp.json();
+                if (data.status === 'ok') {
+                    setStatus('健康检查通过 ✓', 'success');
+                    addLog('✓ /health 返回: ' + JSON.stringify(data));
+                    offerBtn.disabled = false;
+                } else {
+                    setStatus('健康检查失败：返回异常', 'error');
+                    addLog('✗ /health 返回: ' + JSON.stringify(data));
+                }
+            } catch (e) {
+                setStatus('健康检查失败：无法连接', 'error');
+                addLog('✗ 连接错误: ' + e.message);
+            }
+            healthBtn.disabled = false;
+        }
+
+        async function testOffer() {
+            addLog('测试 /offer WebRTC 信令...');
+            offerBtn.disabled = true;
+            setStatus('正在建立 WebRTC 连接...', 'pending');
+
+            try {
+                pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+
+                pc.oniceconnectionstatechange = () => {
+                    addLog('ICE 连接状态: ' + pc.iceConnectionState);
+                    if (pc.iceConnectionState === 'connected') {
+                        setStatus('WebRTC 连接成功 ✓', 'success');
+                    } else if (pc.iceConnectionState === 'failed') {
+                        setStatus('WebRTC 连接失败', 'error');
+                    }
+                };
+
+                pc.ontrack = (event) => {
+                    addLog('收到远程视频轨道');
+                    if (event.track.kind === 'video') {
+                        videoContainer.style.display = 'block';
+                        remoteVideo.srcObject = event.streams[0];
+                    }
+                };
+
+                // 添加接收器（audio + video）
+                pc.addTransceiver('audio', { direction: 'recvonly' });
+                pc.addTransceiver('video', { direction: 'recvonly' });
+
+                // 创建 SDP offer
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                addLog('创建本地 SDP offer');
+
+                // 发送 offer 到后端
+                addLog('发送 offer 到 ' + serverUrl() + '/offer ...');
+                const resp = await fetch(serverUrl() + '/offer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sdp: pc.localDescription.sdp,
+                        type: pc.localDescription.type
+                    })
+                });
+
+                const answer = await resp.json();
+                addLog('收到后端响应: ' + JSON.stringify({...answer, sdp: answer.sdp ? answer.sdp.substring(0, 50) + '...' : ''}));
+
+                if (answer.sdp && answer.type === 'answer') {
+                    await pc.setRemoteDescription(
+                        new RTCSessionDescription({ type: 'answer', sdp: answer.sdp })
+                    );
+                    addLog('设置远程 SDP answer');
+                    setStatus('WebRTC 信令交换完成，等待连接...', 'pending');
+                } else if (answer.status === 'placeholder') {
+                    setStatus('WebRTC 端点返回占位响应（后端未接入真实 Stream）', 'pending');
+                    addLog('⚠ 后端返回占位响应，请确认 Linly-Talker-Stream 已启动');
+                } else {
+                    setStatus('WebRTC 信令失败：' + (answer.message || '未知错误'), 'error');
+                    addLog('✗ 信令错误: ' + JSON.stringify(answer));
+                }
+            } catch (e) {
+                setStatus('WebRTC 测试异常: ' + e.message, 'error');
+                addLog('✗ 异常: ' + e.message);
+            }
+            offerBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>

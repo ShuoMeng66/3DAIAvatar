@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+venv/
+env/
+
+# Build
+frontend/dist/
+frontend/build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model weights (large files)
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+models/
+checkpoints/
+data/avatars/
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# Temp
+tmp/
+temp/
+output/

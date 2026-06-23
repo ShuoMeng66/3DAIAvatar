@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: 'Noto Sans SC', system-ui, sans-serif;
+  --font-size-base: 20px;
+  --color-warm-bg: #FFF8F0;
+  --color-warm-bg-dark: #F5E6D3;
+  --color-warm-text: #3D2C0A;
+  --color-warm-text-light: #6B5A3E;
+  --color-warm-primary: #F59E0B;
+  --color-warm-primary-hover: #D97706;
+  --color-warm-rose: #FDF2F8;
+  --color-warm-border: #E5E0D8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans SC', system-ui, sans-serif;
+  font-size: 20px;
+  background: linear-gradient(180deg, #FFF8F0 0%, #F5E6D3 100%);
+  color: #3D2C0A;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 大字按钮基础样式 */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 16px 32px;
+  font-size: 22px;
+  font-weight: 700;
+  border-radius: 16px;
+  border: none;
+  background: #F59E0B;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-primary:hover { background: #D97706; }
+.btn-primary:active { background: #B45309; transform: scale(0.98); }
+
+/* 大字输入框 */
+.input-large {
+  width: 100%;
+  min-height: 64px;
+  padding: 16px 20px;
+  font-size: 22px;
+  border: 2px solid #E5E0D8;
+  border-radius: 16px;
+  background: white;
+  color: #3D2C0A;
+  outline: none;
+  font-family: inherit;
+}
+.input-large:focus { border-color: #F59E0B; }
+
+/* 字幕样式 */
+.subtitle-text {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}

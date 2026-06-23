@@ -1,0 +1,116 @@
+version: "3.8"
+
+# ============================================
+# ElderTalk Docker Compose 部署配置
+# ============================================
+# 启动: docker compose up -d
+# 停止: docker compose down
+# 查看日志: docker compose logs -f
+
+services:
+  # ============================================
+  # 前端 Nginx 服务
+  # ============================================
+  frontend:
+    image: nginx:1.27-alpine
+    container_name: eldertalk-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - eldertalk-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # 后端 API 网关
+  # ============================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    container_name: eldertalk-backend
+    restart: unless-stopped
+    runtime: nvidia
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./backend:/app:ro
+      - ./models:/app/models:ro
+      - ./assets:/app/assets:ro
+      - ./hologram/output:/app/output
+    env_file:
+      - .env
+    environment:
+      - ENV=production
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - linly-stream
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - eldertalk-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================
+  # Linly-Talker-Stream GPU 推理服务
+  # ============================================
+  # 注意：此服务需要 GPU 支持，部署前请确保：
+  # 1. 安装 NVIDIA Container Toolkit
+  # 2. nvidia-smi 可正常执行
+  # 3. Linly-Talker-Stream 模型已下载到 ./models/ 目录
+  linly-stream:
+    image: linly-talker-stream:latest
+    container_name: eldertalk-linly-stream
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+    ports:
+      - "8011:8010"
+    volumes:
+      - ./models:/app/models:ro
+      - ./data/avatars:/app/data/avatars:ro
+      - ./config:/app/config:ro
+    env_file:
+      - .env
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - eldertalk-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+networks:
+  eldertalk-network:
+    driver: bridge

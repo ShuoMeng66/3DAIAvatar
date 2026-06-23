@@ -1,0 +1,23 @@
+# Checklist: 老人友好 Web 前端
+
+- [x] `frontend/` 使用 Vite + React + TypeScript + Tailwind CSS v4
+- [x] 思源黑体（Noto Sans SC）CDN 已引入，页面字体为圆润中文
+- [x] lucide-react 图标库已安装，mic/stop/settings 图标可用
+- [x] 路由配置完成：/chat（首页）、/settings（密码保护）、/hologram
+- [x] 导航栏简洁：仅显示「聊天」和「全息」两个入口，设置隐藏
+- [x] ChatPage 展示数字人视频区（60% 屏幕）+ 大字幕 + 底部操作按钮
+- [x] AvatarPlayer 组件能接收 WebRTC 远程视频流并渲染
+- [x] VoiceButton 组件支持按住录音（MediaRecorder），松开后 POST /asr
+- [x] SubtitleBar 组件显示大字号 AI 回复文字
+- [x] ChatHistory 组件显示最近 5 条对话
+- [x] 文字输入框 + 发送按钮可用，POST /api/v1/chat/text 得到回复
+- [x] 30 秒空闲自动问候逻辑已实现
+- [x] SettingsPage 需密码验证（默认 123456）才能进入
+- [x] SettingsPage 包含老人称呼、形象上传、声音克隆、提醒事项 CRUD、LLM 人设微调
+- [x] 提醒事项 CRUD 使用 localStorage 持久化
+- [x] HologramPage 展示黑底正方形预览区 + 推送按钮
+- [x] 所有字号 ≥ 20px，按钮高度 ≥ 64px
+- [x] 暖色系配色（米色背景 + 暖橙色主色），无花哨动画
+- [x] `frontend/DESIGN.md` 存在，包含设计参考和原则
+- [x] `FRONTEND.md` 存在，包含技术文档
+- [x] `npm run dev` 可正常启动
