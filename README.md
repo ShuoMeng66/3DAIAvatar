@@ -1,8 +1,10 @@
-# ElderTalk — 虚拟真人陪聊 Web 应用
+# ElderTalk — 虚拟真人陪聊系统
 
-基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) 实时数字人技术，面向独居/空巢老人群体的智能陪聊系统。
+面向独居/空巢老人的智能陪聊系统，基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) 数字人技术。
 
-**在线体验**：https://shuomeng66.github.io/3DAIAvatar/
+**一句话**：一台电脑后台跑服务，老人在浏览器打开就能和数字人聊天。
+
+---
 
 ## 功能概览
 
@@ -13,285 +15,155 @@
 - 天气播报：每日天气预报
 - 全息展示：适配 3D LED 全息风扇屏，数字人跃然空中
 - 全双工打断：数字人说话时用户可开口打断
-- 声音克隆：上传 1 分钟家属录音 → 自动微调 → 家人声音陪聊
+- 声音克隆：上传家属录音 → 自动克隆 → 家人声音陪聊
 - 数字人定制：上传照片 + 录音 → 生成家人专属数字人
 
-## 技术栈
-
-| 模块 | 技术 |
-|------|------|
-| 前端 | React 18 + TypeScript + Tailwind CSS 4 + Vite |
-| 后端 | Python 3.10 + FastAPI |
-| 云函数 | Cloudflare Worker（百炼 LLM + TTS 代理） |
-| 实时通信 | WebRTC（aiortc + aiohttp） |
-| 数字人引擎 | Linly-Talker-Stream（MuseTalk / Wav2Lip） |
-| 大语言模型 | qwen3.5-omni-plus（阿里云百炼） |
-| 语音识别 | FunASR / OmniSenseVoice / 浏览器端 Web Speech |
-| 语音合成 | CosyVoice / sambert-zhide-v1（百炼）/ Edge TTS |
-| 声音克隆 | CosyVoice 3s zero-shot / GPT-SoVITS 微调 |
-| 全息推流 | FFmpeg + mediamtx RTSP |
-| 部署 | GitHub Pages + Cloudflare Worker / Docker Compose（GPU） |
-
 ---
 
-## 部署方式
+## 快速开始（本地运行）
 
-本项目提供两种部署方式，按需选择：
+### 使用方式
 
-| 方式 | 适用场景 | 需要 GPU | 数字人 3D 形象 |
-|------|----------|----------|---------------|
-| 方式一：静态网页 + 云函数 | 快速体验、文字/语音对话 | 否 | 静态形象 |
-| 方式二：GPU 服务器完整部署 | 真人 3D 数字人、全息屏 | 是 | 真人 3D |
+1. 在电脑上启动后端服务
+2. 老人打开浏览器（或平板上打开浏览器）访问页面
+3. 语音/文字对话开始
 
----
+无需注册、无需联网到公网、纯本地运行。
 
-## 方式一：静态网页 + Cloudflare Worker（推荐快速体验）
+### 环境要求
 
-### 1.1 启用 GitHub Pages
+| 配置 | 最低（无数字人视频） | 推荐（含数字人视频） |
+|------|---------------------|-------------------|
+| 操作系统 | Windows 10+ / Ubuntu 22.04 / macOS | Windows 10+ / Ubuntu 22.04 |
+| CPU | 4 核 | 8 核 |
+| GPU | 不需要 | NVIDIA RTX 3060 12GB+ |
+| 内存 | 8GB | 32GB |
+| 磁盘 | 10GB | 50GB+ |
+| Python | 3.10+ | 3.10+ |
+| Node.js | 18+ | 18+ |
 
-打开 https://github.com/ShuoMeng66/3DAIAvatar/settings/pages
-
-- **Source** 选 **GitHub Actions**
-- 等待 Actions 自动构建部署（约 1-2 分钟）
-- 访问 `https://shuomeng66.github.io/3DAIAvatar/`
-
-### 1.2 部署 Cloudflare Worker API
+### 第一步：克隆
 
 ```bash
-# 进入 Worker 目录
-cd workers/elder-talk-api
+git clone https://github.com/ShuoMeng66/3DAIAvatar.git
+cd 3DAIAvatar
+```
 
-# 安装依赖
+### 第二步：配置 API Key
+
+申请百炼 API Key（免费，有效期到 2099 年）：https://bailian.console.aliyun.com
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入以下内容：
+# DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
+```
+
+### 第三步：启动后端
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8010
+```
+
+### 第四步：启动前端
+
+```bash
+cd frontend
 npm install
-
-# 登录 Cloudflare（首次使用）
-npx wrangler login
-
-# 设置百炼 API Key（Secret 存储，不会暴露在代码中）
-npx wrangler secret put DASHSCOPE_API_KEY
-# 输入你的百炼 API Key（从 https://bailian.console.aliyun.com 获取）
-
-# 部署 Worker
-npx wrangler deploy
+npm run dev -- --host 0.0.0.0
 ```
 
-部署成功后会输出 Worker URL，例如：
-```
-https://elder-talk-api.medprep.workers.dev
-```
+### 第五步：使用
 
-### 1.3 更新前端 API 地址
-
-编辑 `frontend/src/services/config.ts`，将 `WORKER_URL` 改为你的 Worker 地址：
-
-```ts
-export const WORKER_URL = 'https://elder-talk-api.你的子域名.workers.dev';
-```
-
-然后重新推送代码触发 GitHub Actions 重新构建。
-
-### 1.4 验证部署
-
-访问 Worker 健康检查端点：
-```
-https://elder-talk-api.你的子域名.workers.dev/api/v1/health
-```
-
-应返回：
-```json
-{"status":"ok","service":"ElderTalk API","model":"qwen3.5-omni-plus","tts_model":"sambert-zhide-v1"}
-```
-
-### 1.5 百炼 API Key 申请
-
-1. 访问 https://bailian.console.aliyun.com
-2. 开通「模型服务」→ 获取 API Key
-3. 免费模型额度充足（有效期到 2099 年）
-4. 可用模型：
-   - **对话**：qwen3.5-omni-plus（全模态，共情能力强）
-   - **语音合成**：sambert-zhide-v1（知德 — 温暖亲切男声）
-   - 备用：qwen3.5-omni-flash（更快更轻）、sambert-zhishu-v1
+- 老人在**本机**打开浏览器 → 访问 `http://localhost:5173`
+- 老人在**同局域网平板**上打开 → 访问 `http://电脑的IP:5173`
+- 子女**远程访问** → 通过 frp/DDNS 暴露端口
 
 ---
 
-## 方式二：GPU 服务器完整部署（含 3D 数字人视频流）
+## 有 GPU 时：开启 3D 数字人
 
-### 2.1 环境要求
+> 如果你有一台带 NVIDIA 显卡的电脑（RTX 3060 12GB 起），可以开启真人 3D 数字人。
 
-| 配置 | 最低 | 推荐 |
-|------|------|------|
-| GPU | RTX 3060 12GB | RTX 3090/4090 24GB |
-| 显存 | 8GB | 16GB+ |
-| 内存 | 16GB | 32GB+ |
-| 磁盘 | 50GB（模型约 20GB） | 100GB+ |
-| 操作系统 | Ubuntu 22.04 | Ubuntu 22.04 |
-| CUDA | 12.1+ | 12.1+ |
-| Python | 3.10+ | 3.10+ |
-| Node.js | 18+ | 20+ |
-
-### 2.2 各模块显存占用
+### 显存占用
 
 | 模块 | 模型 | 显存 |
 |------|------|------|
-| ASR | FunASR / OmniSenseVoice | ~1GB |
-| LLM | Qwen2.5-7B (INT4) | ~6GB |
-| TTS | CosyVoice | ~2GB |
-| Avatar | MuseTalk (实时) | ~4GB |
+| ASR 语音识别 | FunASR | ~1GB |
+| LLM 对话 | Qwen2.5-7B (INT4) | ~6GB |
+| TTS 语音合成 | CosyVoice | ~2GB |
+| 数字人驱动 | MuseTalk (实时) | ~4GB |
 | **总计** | 全部加载 | ~13GB |
 
-> 可通过模型卸载策略减少显存，仅加载当前使用的模块。
-
-### 2.3 租用 GPU 服务器
-
-| 平台 | 配置 | 价格 | 适用场景 |
-|------|------|------|----------|
-| AutoDL | RTX 3090 24GB | ¥2-4/小时 | 按量付费，适合测试 |
-| 阿里云 PAI | V100 32GB | ¥5-10/小时 | 企业级，稳定 |
-| 矩池云 | RTX 3080 10GB | ¥1-3/小时 | 性价比高 |
-| 本地主机 | RTX 3060 12GB+ | 一次性 | 7×24 长期运行 |
-
-### 2.4 克隆仓库并安装依赖
+### 下载数字人模型
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/ShuoMeng66/3DAIAvatar.git
-cd 3DAIAvatar
-
-# 2. 配置环境变量（重要！）
-cp .env.example .env
-vim .env
-```
-
-`.env` 文件需要填入以下内容：
-
-```bash
-# ====== 必填 ======
-DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx    # 百炼 API Key（LLM 对话）
-# ====== 可选 ======
-WEATHER_API_KEY=xxxxxxxxxxxxxxxx         # 和风天气 API Key（免费申请：https://devapi.qweather.com）
-LLM_API_KEY=sk-xxxxxxxxxxxxxxxx          # DeepSeek API Key（备用 LLM）
-# ====== 服务器配置 ======
-HOST=0.0.0.0
-PORT=8010
-FRONTEND_ORIGIN=http://localhost:5173
-```
-
-```bash
-# 3. 安装系统依赖
-sudo apt update
-sudo apt install -y ffmpeg python3-pip python3-venv nodejs npm
-
-# 4. 安装 Python 依赖
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# 5. 安装全息模块依赖（可选，需要全息屏输出时安装）
-pip install rembg opencv-python aiohttp websockets
-
-# 6. 安装前端依赖
-cd ../frontend
-npm install
-```
-
-### 2.5 下载数字人模型权重
-
-这是最耗时的一步，首次运行会自动下载约 15GB 模型文件。
-
-```bash
-# 进入 Linly-Talker-Stream 目录
-cd ../third_party/Linly-Talker-Stream
-
-# 安装 Linly-Talker 依赖
-pip install -r requirements.txt
-```
-
-**手动下载模型（推荐，更稳定）**：
-
-```bash
-# 使用 HuggingFace 镜像（国内网络友好）
+# 国内网络用镜像
 export HF_ENDPOINT=https://hf-mirror.com
 
-# 下载 MuseTalk 模型（唇形同步）
+# 下载 MuseTalk（唇形同步）
 huggingface-cli download TMElyralab/MuseTalk --local-dir pretrained_models/MuseTalk
 
-# 下载 FunASR 模型（语音识别）
-huggingface-cli download iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch --local-dir pretrained_models/FunASR
-
-# 下载 CosyVoice 模型（语音合成，约 1.2GB）
+# 下载 CosyVoice（语音合成）
 huggingface-cli download FunAudioLLM/CosyVoice-300M --local-dir pretrained_models/CosyVoice-300M
+
+# 下载 FunASR（语音识别）
+huggingface-cli download iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch --local-dir pretrained_models/FunASR
 ```
 
-### 2.6 下载数字人形象素材
+### 下载数字人形象
+
+从 Pixabay 下载 CC0 免费人像：
+
+```
+慈祥奶奶：https://pixabay.com/photos/search/elderly%20woman%20smile/
+慈祥爷爷：https://pixabay.com/photos/search/elderly%20man%20smile/
+孙女形象：https://pixabay.com/photos/search/young%20woman%20smile%20portrait/
+护工形象：https://pixabay.com/photos/search/nurse%20smile/
+```
+
+放入对应目录并预处理：
 
 ```bash
-# 从 Pixabay 下载 CC0 免费人像照片
-# 或使用项目自带的示例图片
-cd assets/avatars/
-
-# 手动下载 4 套形象（搜索关键词见 MANIFEST.json）
-# 慈祥奶奶：https://pixabay.com/photos/search/elderly%20woman%20smile/
-# 慈祥爷爷：https://pixabay.com/photos/search/elderly%20man%20smile/
-# 孙女形象：https://pixabay.com/photos/search/young%20woman%20smile%20portrait/
-# 护工形象：https://pixabay.com/photos/search/nurse%20smile/
-
-# 下载后放入对应目录，然后运行预处理脚本
-cd backend
-python scripts/preprocess_avatar.py --input ../assets/avatars/grandma_warm/source.jpg --output ../assets/avatars/grandma_warm/
+python backend/scripts/preprocess_avatar.py \
+  --input assets/avatars/grandma_warm/source.jpg \
+  --output assets/avatars/grandma_warm/
 ```
 
-### 2.7 启动服务
+### 启动 Linly-Talker 数字人引擎
 
-**三个终端分别启动：**
-
-终端 1 — Linly-Talker 数字人引擎（端口 8000）：
 ```bash
 cd third_party/Linly-Talker-Stream
+pip install -r requirements.txt
 python app.py --host 0.0.0.0 --port 8000
 ```
 
-终端 2 — ElderTalk 后端 API（端口 8010）：
-```bash
-cd backend
-source venv/bin/activate
-uvicorn main:app --host 0.0.0.0 --port 8010 --reload
-```
+然后按上面的第三步启动后端、第四步启动前端即可。前端自动连接数字人视频流。
 
-终端 3 — 前端开发服务器（端口 5173）：
-```bash
-cd frontend
-npm run dev -- --host 0.0.0.0 --port 5173
-```
+---
 
-### 2.8 访问
+## 给家属看的
 
-```
-前端页面：    http://YOUR_SERVER_IP:5173
-API 文档：    http://YOUR_SERVER_IP:8010/docs
-Linly-Talker：http://YOUR_SERVER_IP:8000
-```
+### 替老人设置
 
-### 2.9 Docker 一键部署（GPU）
+1. 在老人电脑/平板上准备一个 `启动.bat`（Windows）或 `启动.sh`，一键执行
+2. 浏览器设置开机自动打开 `http://localhost:5173`
+3. 语音按钮够大，老人直接对着说话即可
+4. 字号 28px，默认接听模式，无需任何操作
 
-```bash
-# 使用 GPU 版 Dockerfile
-docker compose -f docker-compose.yml up -d
+### 远程维护
 
-# 查看日志
-docker compose logs -f
-
-# 停止
-docker compose down
-```
+- 后端改了代码后自动热重载（`--reload` 模式）
+- 对话日志存储在后端，可查看老人聊天记录
+- 声音克隆 API 可远程调用，帮老人定制家人声音
 
 ---
 
 ## 声音克隆模块
 
-### 3.1 模块概述
-
-支持三种克隆引擎：
+### 支持三种克隆引擎
 
 | 引擎 | 需要音频 | 需要 GPU | 效果 | 使用场景 |
 |------|----------|----------|------|----------|
@@ -299,7 +171,7 @@ docker compose down
 | GPT-SoVITS | 1 分钟+ | 是 | 最好 | 家人声音定制 |
 | Edge TTS | 无需 | 否 | 一般 | 快速测试 |
 
-### 3.2 CosyVoice 3 秒零样本克隆（推荐）
+### CosyVoice 3 秒零样本克隆（推荐）
 
 ```bash
 # 1. 准备 1-5 秒清晰录音（WAV 格式，16kHz，单声道）
@@ -313,7 +185,7 @@ curl -X POST http://localhost:8010/api/v1/voice/clone \
 # {"status": "ok", "voice_id": "cosyvoice_a1b2c3d4", "name": "家人的声音"}
 ```
 
-### 3.3 GPT-SoVITS 微调（效果最好）
+### GPT-SoVITS 微调（效果最好）
 
 ```bash
 # 1. 准备 1 分钟以上录音 + 对应文字内容
@@ -329,7 +201,7 @@ curl -X POST http://localhost:8010/api/v1/voice/clone \
 # 约 30 分钟（RTX 3060）
 ```
 
-### 3.4 Edge TTS 快速测试（免 GPU）
+### Edge TTS 快速测试（免 GPU）
 
 ```bash
 # 无需上传音频，直接调用
@@ -338,7 +210,7 @@ curl -X POST http://localhost:8010/api/v1/voice/clone \
   -F "engine=edge_tts"
 ```
 
-### 3.5 管理声音
+### 管理声音
 
 ```bash
 # 列出所有声音
@@ -354,7 +226,7 @@ curl -X POST http://localhost:8010/api/v1/voice/tts \
 
 ## 全息屏输出模块
 
-### 4.1 全息视频转换
+### 全息视频转换
 
 将数字人视频转换为全息屏专用格式（正方形、黑底、人物居中）：
 
@@ -372,7 +244,7 @@ python -m hologram.converter avatar_video.mp4 -o hologram_rembg.mp4 --rembg
 python -m hologram.converter --info avatar_video.mp4
 ```
 
-### 4.2 RTSP 实时推流
+### RTSP 实时推流
 
 ```bash
 # 1. 启动 mediamtx RTSP 服务器
@@ -388,13 +260,13 @@ ffplay -rtsp_transport tcp rtsp://localhost:8554/hologram
 vlc rtsp://localhost:8554/hologram
 ```
 
-### 4.3 TF 卡导出模式
+### TF 卡导出模式
 
 ```bash
 python -m hologram.streamer watch avatar_video.mp4 --dir /mnt/tfcard/ --chunk 30
 ```
 
-### 4.4 全息屏设备兼容性
+### 全息屏设备兼容性
 
 详见 [HOLOGRAM_DEVICES.md](HOLOGRAM_DEVICES.md)，支持三种设备类型：
 
@@ -408,7 +280,7 @@ python -m hologram.streamer watch avatar_video.mp4 --dir /mnt/tfcard/ --chunk 30
 
 ## 素材体系
 
-### 5.1 素材清单
+### 素材清单
 
 所有素材的下载来源、许可证、使用方法详见各自的 MANIFEST.json：
 
@@ -419,7 +291,7 @@ python -m hologram.streamer watch avatar_video.mp4 --dir /mnt/tfcard/ --chunk 30
 | 动画特效 | [assets/animations/MANIFEST.json](assets/animations/MANIFEST.json) | 5 种 |
 | 陪聊话题库 | [assets/topics/companion_topics.json](assets/topics/companion_topics.json) | 150 条 |
 
-### 5.2 下载数字人形象
+### 下载数字人形象
 
 从 Pixabay 下载 CC0 免费人像（可商用，无需署名）：
 
@@ -432,7 +304,7 @@ python -m hologram.streamer watch avatar_video.mp4 --dir /mnt/tfcard/ --chunk 30
 
 图片要求：正面或微侧、光线均匀、自然微笑、≥512×512、背景简洁。
 
-### 5.3 素材替换
+### 素材替换
 
 详见 [ASSETS.md](ASSETS.md)，包含：
 - 如何替换数字人形象
@@ -596,7 +468,8 @@ IDLE → LISTENING → THINKING → SPEAKING → IDLE
 ## 常见问题
 
 ### Q: 没有 GPU 能用吗？
-可以。使用方式一（GitHub Pages + Cloudflare Worker），通过百炼 API 驱动对话，只是没有真人 3D 数字人视频流。
+可以。直接用百炼 API 驱动对话（免费，无需 GPU），只是没有真人 3D 数字人视频流，前端显示静态形象。
+如果后面买了带 GPU 的电脑，接上 Linly-Talker 就能自动切换为 3D 数字人。
 
 ### Q: 如何申请百炼 API Key？
 访问 https://bailian.console.aliyun.com → 开通模型服务 → 生成 API Key。免费额度充足（有效期到 2099 年）。
@@ -613,8 +486,8 @@ IDLE → LISTENING → THINKING → SPEAKING → IDLE
 ### Q: 如何替换数字人形象？
 参见 [ASSETS.md](ASSETS.md)，从 Pixabay 下载 CC0 人像 → 放入对应目录 → 运行预处理脚本。
 
-### Q: 如何克隆家人的声音？
-参见 [声音克隆模块](#声音克隆模块)，上传 1-5 秒录音 → 调用 API → 获得 voice_id。
+### Q: GitHub Pages 上的演示是干嘛的？
+https://shuomeng66.github.io/3DAIAvatar/ 是一个快速体验入口，能直接测试文字对话功能。但完整功能（语音、数字人、全息屏）需要在本地跑服务。你可以把它当成一个「先看看效果」的展示页，不代表项目的使用方式。
 
 ---
 
