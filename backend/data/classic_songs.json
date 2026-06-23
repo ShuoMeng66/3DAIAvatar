@@ -1,0 +1,31 @@
+{
+  "old_songs": [
+    {"name": "小城故事", "singer": "邓丽君", "year": 1979},
+    {"name": "甜蜜蜜", "singer": "邓丽君", "year": 1979},
+    {"name": "月亮代表我的心", "singer": "邓丽君", "year": 1977},
+    {"name": "夜来香", "singer": "李香兰", "year": 1944},
+    {"name": "天涯歌女", "singer": "周璇", "year": 1937},
+    {"name": "四季歌", "singer": "周璇", "year": 1937},
+    {"name": "南泥湾", "singer": "郭兰英", "year": 1943},
+    {"name": "我的祖国", "singer": "郭兰英", "year": 1956},
+    {"name": "洪湖水浪打浪", "singer": "王玉珍", "year": 1958},
+    {"name": "茉莉花", "singer": "民间", "year": 1800},
+    {"name": "草原上升起不落的太阳", "singer": "吴雁泽", "year": 1952},
+    {"name": "在那遥远的地方", "singer": "王洛宾", "year": 1939},
+    {"name": "康定情歌", "singer": "民间", "year": 1946},
+    {"name": "阿里山的姑娘", "singer": "邓丽君", "year": 1952},
+    {"name": "纤夫的爱", "singer": "尹相杰/于文华", "year": 1994}
+  ],
+  "opera": [
+    {"name": "贵妃醉酒", "type": "京剧", "description": "梅兰芳代表作"},
+    {"name": "霸王别姬", "type": "京剧", "description": "梅派经典"},
+    {"name": "空城计", "type": "京剧", "description": "诸葛亮戏"},
+    {"name": "女驸马", "type": "黄梅戏", "description": "经典黄梅戏"},
+    {"name": "天仙配", "type": "黄梅戏", "description": "黄梅戏代表作"},
+    {"name": "梁山伯与祝英台", "type": "越剧", "description": "越剧经典"},
+    {"name": "红楼梦", "type": "越剧", "description": "越剧名篇"},
+    {"name": "花木兰", "type": "豫剧", "description": "豫剧经典"},
+    {"name": "穆桂英挂帅", "type": "豫剧", "description": "豫剧名段"},
+    {"name": "刘海砍樵", "type": "花鼓戏", "description": "湖南花鼓戏"}
+  ]
+}

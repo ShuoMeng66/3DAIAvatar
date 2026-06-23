@@ -102,6 +102,52 @@ class LLMAdapter:
         
         return f"嗯，我听着呢。您说的我都记在心里了。还有什么想跟我聊聊的吗？"
 
+    async def chat_stream(
+        self,
+        message: str,
+        history: Optional[List[Dict[str, str]]] = None,
+        session_id: str = "default",
+    ):
+        """
+        流式对话 - 逐 token 产出
+        
+        Yields:
+            {"token": "..."} 或 {"done": True}
+        """
+        messages = [{"role": "system", "content": self.system_prompt}]
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": message})
+
+        # 占位实现：模拟流式输出
+        # 实际接入 DeepSeek API 流式模式:
+        # import openai
+        # client = openai.OpenAI(api_key=self.api_key, base_url=self.base_url)
+        # stream = client.chat.completions.create(
+        #     model=self.model,
+        #     messages=messages,
+        #     stream=True,
+        # )
+        # for chunk in stream:
+        #     if chunk.choices[0].delta.content:
+        #         yield {"token": chunk.choices[0].delta.content}
+        # yield {"done": True}
+        
+        # 模拟流式输出
+        reply = self._generate_placeholder_reply(message)
+        words = reply
+        chunk_size = 3
+        for i in range(0, len(words), chunk_size):
+            yield {"token": words[i:i+chunk_size]}
+            import asyncio
+            await asyncio.sleep(0.05)
+        yield {"done": True}
+
+    def cancel_stream(self):
+        """取消当前流式生成"""
+        # 实际接入时设置一个 cancellation token
+        logger.info("LLM 流式生成已取消")
+
 
 # 单例模式
 _llm_adapter: Optional[LLMAdapter] = None

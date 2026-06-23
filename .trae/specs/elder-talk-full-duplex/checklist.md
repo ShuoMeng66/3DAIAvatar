@@ -1,0 +1,23 @@
+# Checklist: 实时全双工对话与 Barge-in
+
+- [x] `hooks/useVAD.ts` 封装 VAD 生命周期（使用 Web Audio API AnalyserNode）
+- [x] VAD 在 SPEAKING 状态下持续监听，检测到用户开口即触发打断
+- [x] `hooks/useConversationState.ts` 实现五态状态机（IDLE/LISTENING/THINKING/SPEAKING/INTERRUPTING）
+- [x] 状态机提供 startListening/finishListening/startSpeaking/finishSpeaking/interrupt 方法
+- [x] `services/bargein.ts` 打断管理器存在，SPEAKING+VAD speech → 发送 interrupt
+- [x] `POST /interrupt` 后端端点实现：停止 TTS/Avatar，清空缓存队列（占位实现，含 TODO）
+- [x] `backend/services/companion.py` 存在，包含天气查询模块
+- [x] companion.py 包含吃药提醒模块（到点返回播报文本）
+- [x] companion.py 包含重复问题检测（3 条缓存，SequenceMatcher > 0.6 相似度）
+- [x] companion.py 包含情绪关键词检测（孤独/睡不着/想孩子等 5 类）
+- [x] `backend/data/classic_songs.json` 存在，分类老歌/戏曲，含歌名、歌手
+- [x] `backend/services/weather.py` 存在，集成和风天气 API（devapi.qweather.com）
+- [x] `backend/services/llm_adapter.py` 添加 `chat_stream()` 流式方法
+- [x] `/api/v1/chat/stream` SSE 端点存在，推送流式 token
+- [x] ChatPage 集成 useConversationState + useVAD，UI 显示当前状态
+- [x] 语音按钮根据状态切换样式（LISTENING=红色脉冲、SPEAKING=橙色禁按）
+- [x] 打断时字幕栏显示「好的，我听着呢」
+- [x] 数字人特征预加载策略在 PERFORMANCE.md 中记录，代码占位已写
+- [x] `backend/config.py` 更新，添加天气 API、提醒等配置项
+- [x] `PERFORMANCE.md` 存在，记录各环节耗时目标与优化策略
+- [x] `scripts/record_demo.sh` + `record_demo.ps1` 存在，支持 Linux/macOS/Windows

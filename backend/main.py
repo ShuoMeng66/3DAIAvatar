@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from config import settings
-from routers import chat, avatar, session
+from routers import chat, avatar, session, interrupt, stream
 
 # 创建 FastAPI 应用实例
 app = FastAPI(title="ElderTalk API", version="0.1.0")
@@ -25,6 +25,8 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(avatar.router)
 app.include_router(session.router)
+app.include_router(interrupt.router)
+app.include_router(stream.router)
 
 # 挂载静态文件目录（/assets 路径映射到 assets/ 目录）
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")

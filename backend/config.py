@@ -61,6 +61,16 @@ class Settings:
     # 日志级别
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
 
+    # --- 天气配置 ---
+    # 和风天气 API Key（免费申请：https://dev.qweather.com/）
+    WEATHER_API_KEY: str = os.getenv("WEATHER_API_KEY", "")
+    # 和风天气实时天气 API 地址
+    WEATHER_BASE_URL: str = os.getenv("WEATHER_BASE_URL", "https://devapi.qweather.com/v7/weather/now")
+
+    # --- 吃药提醒配置 ---
+    # 提醒检查间隔（秒）
+    REMINDER_CHECK_INTERVAL: int = int(os.getenv("REMINDER_CHECK_INTERVAL", "60"))
+
 
 # 全局配置单例
 settings = Settings()
