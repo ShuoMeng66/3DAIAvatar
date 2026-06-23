@@ -372,11 +372,7 @@ ElderTalk/
 │   ├── requirements.txt
 │   └── Dockerfile
 │
-├── workers/                     # Cloudflare Worker
-│   └── elder-talk-api/
-│       ├── src/index.ts              # 百炼 API 代理
-│       ├── wrangler.toml
-│       └── package.json
+├── docker-compose.yml           # Docker 编排
 │
 ├── hologram/                    # 全息屏适配模块
 │   ├── converter.py                 # 视频转换管道
@@ -406,9 +402,6 @@ ElderTalk/
 ├── scripts/                     # 工具脚本
 │   ├── record_demo.sh           # 演示录制（Linux/macOS）
 │   └── record_demo.ps1          # 演示录制（Windows）
-│
-├── .github/workflows/           # GitHub Actions
-│   └── deploy.yml               # 自动部署到 GitHub Pages
 │
 ├── docker-compose.yml           # Docker 编排
 ├── PERFORMANCE.md               # 性能指标与延迟优化
@@ -485,9 +478,6 @@ IDLE → LISTENING → THINKING → SPEAKING → IDLE
 
 ### Q: 如何替换数字人形象？
 参见 [ASSETS.md](ASSETS.md)，从 Pixabay 下载 CC0 人像 → 放入对应目录 → 运行预处理脚本。
-
-### Q: GitHub Pages 上的演示是干嘛的？
-https://shuomeng66.github.io/3DAIAvatar/ 是一个快速体验入口，能直接测试文字对话功能。但完整功能（语音、数字人、全息屏）需要在本地跑服务。你可以把它当成一个「先看看效果」的展示页，不代表项目的使用方式。
 
 ---
 

@@ -50,7 +50,10 @@ ElderTalk/
 ├── .gitignore                    # Git 忽略规则
 ├── README.md                     # 项目说明
 ├── PROJECT.md                    # 本文件
-└── HOLOGRAM.md                   # 全息屏适配规范
+├── PERFORMANCE.md                # 性能指标
+├── HOLOGRAM.md                   # 全息屏适配规范
+├── HOLOGRAM_DEVICES.md           # 全息屏设备兼容性
+└── ASSETS.md                     # 素材替换指南
 ```
 
 ## 模块划分

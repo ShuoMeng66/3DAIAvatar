@@ -51,6 +51,3 @@ docker-compose.override.yml
 tmp/
 temp/
 output/
-
-# Cloudflare Workers
-workers/**/.wrangler/

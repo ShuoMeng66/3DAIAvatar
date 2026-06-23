@@ -1,6 +1,0 @@
-name = "elder-talk-api"
-main = "src/index.ts"
-compatibility_date = "2025-06-23"
-
-# API Key 使用 Secret 存储（已在 Cloudflare Dashboard 设置）
-# 终端执行: npx wrangler secret put DASHSCOPE_API_KEY
