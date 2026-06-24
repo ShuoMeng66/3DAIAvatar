@@ -338,21 +338,29 @@ ElderTalk/
 │   │   │   ├── AvatarPlayer.tsx      # WebRTC 视频播放器
 │   │   │   ├── VoiceButton.tsx       # 语音录制按钮
 │   │   │   ├── SubtitleBar.tsx       # 大字幕（28px）
-│   │   │   └── ChatHistory.tsx       # 最近聊天记录
+│   │   │   ├── ChatHistory.tsx       # 最近聊天记录
+│   │   │   └── cabinet/              # 全息仓组件
+│   │   │       ├── CabinetStage.tsx   # 3D 场景 React 封装
+│   │   │       ├── CabinetScene.ts    # Three.js 场景管理器
+│   │   │       └── CabinetSubtitle.tsx # 底部大字幕（36px+）
 │   │   ├── hooks/               # 自定义 Hooks
 │   │   │   ├── useConversationState.ts  # 五态对话状态机
 │   │   │   ├── useVAD.ts              # 语音活动检测
 │   │   │   ├── useWebRTC.ts           # WebRTC 连接管理
-│   │   │   └── useIdleTimer.ts        # 空闲检测
+│   │   │   ├── useIdleTimer.ts        # 空闲检测
+│   │   │   └── useCabinetSync.ts      # 全息仓 SSE 同步
 │   │   ├── pages/               # 页面
 │   │   │   ├── ChatPage.tsx           # 对话页（主页面）
 │   │   │   ├── SettingsPage.tsx       # 家属设置（密码保护）
-│   │   │   └── HologramPage.tsx       # 全息屏控制
+│   │   │   ├── HologramPage.tsx       # 全息仓控制面板
+│   │   │   └── CabinetPage.tsx        # 全息仓展示页
 │   │   ├── services/            # API 服务层
 │   │   │   ├── config.ts              # API 地址配置
 │   │   │   ├── api.ts                 # 后端 API 调用
 │   │   │   ├── bargein.ts             # 打断管理器
 │   │   │   └── webrtc.ts              # WebRTC 信令
+│   │   ├── styles/              # 样式
+│   │   │   └── cabinet.css            # 全息仓专用样式
 │   │   ├── App.tsx               # 路由入口
 │   │   └── main.tsx              # 应用入口
 │   ├── vite.config.ts
@@ -360,12 +368,13 @@ ElderTalk/
 │
 ├── backend/                     # 后端 API 网关
 │   ├── routers/                 # 路由模块
-│   │   ├── chat.py                  # 对话路由
+│   │   ├── chat.py                  # 对话路由（TTS + SSE 广播）
 │   │   ├── avatar.py                # 数字人形象管理
 │   │   ├── session.py               # 会话历史
-│   │   ├── interrupt.py             # 打断控制
+│   │   ├── interrupt.py             # 打断控制（SSE 广播）
 │   │   ├── stream.py                # SSE 流式输出
-│   │   └── voice_clone.py           # 声音克隆
+│   │   ├── voice_clone.py           # 声音克隆
+│   │   └── cabinet.py               # 全息仓 SSE 事件流
 │   ├── services/                # 业务服务
 │   │   ├── llm_adapter.py           # LLM 适配器（含流式）
 │   │   ├── stream_adapter.py        # Linly-Talker HTTP 代理
@@ -413,11 +422,14 @@ ElderTalk/
 │
 ├── scripts/                     # 工具脚本
 │   ├── record_demo.sh           # 演示录制（Linux/macOS）
-│   └── record_demo.ps1          # 演示录制（Windows）
+│   ├── record_demo.ps1          # 演示录制（Windows）
+│   ├── start_cabinet.ps1        # 全息仓一键启动（Windows）
+│   └── start_cabinet.sh         # 全息仓一键启动（Linux/macOS）
 │
 ├── docker-compose.yml           # Docker 编排
 ├── PERFORMANCE.md               # 性能指标与延迟优化
-├── HOLOGRAM.md                  # 全息屏适配规范 + 部署建议
+├── HOLOGRAM.md                  # LED 风扇屏适配规范
+├── HOLOGRAM_CABINET.md          # 全息仓硬件与部署规范
 ├── HOLOGRAM_DEVICES.md          # 全息屏设备兼容性
 ├── ASSETS.md                    # 素材替换指南
 ├── FRONTEND.md                  # 前端技术文档
@@ -487,6 +499,12 @@ IDLE → LISTENING → THINKING → SPEAKING → IDLE
 
 ### Q: 全息屏设备怎么选？
 参见 [HOLOGRAM_DEVICES.md](HOLOGRAM_DEVICES.md)，推荐 TF 卡播放型（最便宜，约 200-500 元）。
+
+### Q: 全息仓和 LED 风扇屏有什么区别？
+- **全息仓**（本项目 Session 7）：HDMI 直连第二显示器，竖屏 9:16 2K，Three.js 实时 3D 渲染，支持实时交互（SSE + WebRTC）。详见 [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md)。
+- **LED 风扇屏**（传统方案）：LED 旋转灯条，512×512 正方形，预录 MP4 视频播放，不支持实时交互。详见 [HOLOGRAM.md](HOLOGRAM.md)。
+
+全息仓不需要 `python -m hologram.converter`，直接通过浏览器 kiosk 模式打开 `/#/cabinet` 即可。
 
 ### Q: 如何替换数字人形象？
 参见 [ASSETS.md](ASSETS.md)，从 Pixabay 下载 CC0 人像 → 放入对应目录 → 运行预处理脚本。

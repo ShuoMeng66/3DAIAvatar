@@ -1,5 +1,9 @@
 # ElderTalk 全息屏适配规范
 
+>  **重要提示**：本文档仅适用于 **LED 全息风扇屏**（3D LED Fan）。  
+> 如果你使用的是 **全息仓**（HDMI 直连第二显示器，竖屏 9:16 2K），请参见 [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md)。  
+> **全息仓不需要 `python -m hologram.converter` 或 `hologram/streamer.py`。**
+
 ## 概述
 本项目输出适配 3D LED 全息风扇屏的视频内容，用于在物理空间中展示数字人形象。
 全息风扇屏通过高速旋转的 LED 灯条显示图像，利用人眼视觉暂留效应呈现 3D 悬浮效果。

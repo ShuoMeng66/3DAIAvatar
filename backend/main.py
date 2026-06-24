@@ -6,8 +6,11 @@ ElderTalk API 服务入口
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from config import settings
-from routers import chat, avatar, session, interrupt, stream, voice_clone
+from routers import chat, avatar, session, interrupt, stream, voice_clone, cabinet
+
+import httpx
 
 # 创建 FastAPI 应用实例
 app = FastAPI(title="ElderTalk API", version="0.1.0")
@@ -28,9 +31,16 @@ app.include_router(session.router)
 app.include_router(interrupt.router)
 app.include_router(stream.router)
 app.include_router(voice_clone.router)
+app.include_router(cabinet.router)
 
 # 挂载静态文件目录（/assets 路径映射到 assets/ 目录）
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+
+# 挂载音频文件目录（TTS 生成的音频）
+from pathlib import Path
+audio_dir = Path(__file__).parent / "data" / "audio"
+audio_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/api/v1/audio", StaticFiles(directory=str(audio_dir)), name="audio")
 
 
 # ==================== 健康检查 ====================
@@ -46,16 +56,44 @@ async def health_check():
 @app.post("/offer")
 async def webrtc_offer(request: Request):
     """
-    WebRTC 信令代理端点（占位）
-    接收前端 SDP offer，返回占位 answer。
+    WebRTC 信令代理端点
+    接收前端 SDP offer，转发到 Linly-Talker-Stream，返回 SDP answer。
     """
     body = await request.json()
-    # 占位：后续接入真实的 WebRTC 信令逻辑
-    return {
-        "sdp": "",
-        "type": "answer",
-        "status": "placeholder",
-    }
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                f"{settings.LINLY_STREAM_URL}/offer",
+                json=body,
+                headers={"Content-Type": "application/json"},
+            )
+            resp.raise_for_status()
+            return JSONResponse(content=resp.json(), status_code=resp.status_code)
+    except httpx.ConnectError:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "Linly-Talker-Stream 未启动",
+                "status": "unavailable",
+            },
+        )
+    except httpx.TimeoutException:
+        return JSONResponse(
+            status_code=504,
+            content={
+                "error": "Linly-Talker-Stream 响应超时",
+                "status": "timeout",
+            },
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=502,
+            content={
+                "error": f"Linly-Talker-Stream 代理错误: {str(e)}",
+                "status": "error",
+            },
+        )
 
 
 # ==================== LLM 对话代理 ====================

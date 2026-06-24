@@ -140,7 +140,7 @@ export async function sendOffer(
   sdp: string,
   type: string
 ): Promise<{ sdp: string; type: string }> {
-  const res = await fetch(`${API_BASE}/api/v1/webrtc/offer`, {
+  const res = await fetch(`${API_BASE}/api/v1/offer`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sdp, type }),

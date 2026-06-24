@@ -56,6 +56,8 @@ class Settings:
     # --- Stream 配置 ---
     # Linly-Talker-Stream 后端地址
     STREAM_BASE_URL: str = os.getenv("STREAM_BASE_URL", "http://localhost:8010")
+    # Linly-Talker-Stream WebRTC 信令地址（用于 /offer 代理）
+    LINLY_STREAM_URL: str = os.getenv("LINLY_STREAM_URL", "http://localhost:8000")
 
     # --- 日志配置 ---
     # 日志级别
