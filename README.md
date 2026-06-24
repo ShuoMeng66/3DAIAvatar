@@ -20,21 +20,15 @@
 
 ---
 
-## 快速开始（本地运行）
+## 快速开始
 
-### 使用方式
-
-1. 在电脑上启动后端服务
-2. 老人打开浏览器（或平板上打开浏览器）访问页面
-3. 语音/文字对话开始
-
-无需注册、无需联网到公网、纯本地运行。
+> 以下命令在 **Linux 服务器**（Ubuntu 22.04）上测试通过，Windows/macOS 同理。
 
 ### 环境要求
 
 | 配置 | 最低（无数字人视频） | 推荐（含数字人视频） |
 |------|---------------------|-------------------|
-| 操作系统 | Windows 10+ / Ubuntu 22.04 / macOS | Windows 10+ / Ubuntu 22.04 |
+| 操作系统 | Ubuntu 22.04 / Windows 10+ | Ubuntu 22.04 / Windows 10+ |
 | CPU | 4 核 | 8 核 |
 | GPU | 不需要 | NVIDIA RTX 3060 12GB+ |
 | 内存 | 8GB | 32GB |
@@ -42,44 +36,46 @@
 | Python | 3.10+ | 3.10+ |
 | Node.js | 18+ | 18+ |
 
-### 第一步：克隆
+### 一键部署（Linux）
 
 ```bash
+# 1. 克隆项目
 git clone https://github.com/ShuoMeng66/3DAIAvatar.git
 cd 3DAIAvatar
-```
 
-### 第二步：配置 API Key
-
-申请百炼 API Key（免费，有效期到 2099 年）：https://bailian.console.aliyun.com
-
-```bash
+# 2. 配置 API Key（申请地址：https://bailian.console.aliyun.com）
 cp .env.example .env
-# 编辑 .env，填入以下内容：
-# DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
-```
+# 编辑 .env：填入 DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
 
-### 第三步：启动后端
-
-```bash
+# 3. 安装后端依赖
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8010
+
+# 4. 启动后端（后台运行）
+nohup python -m uvicorn main:app --host 0.0.0.0 --port 8010 > ../backend.log 2>&1 &
+
+# 5. 安装并启动前端
+cd ../frontend
+npm install
+nohup npm run dev -- --host 0.0.0.0 > ../frontend.log 2>&1 &
+
+# 6. 验证服务
+curl http://localhost:8010/api/v1/health
+curl http://localhost:5173 | head -5
 ```
 
-### 第四步：启动前端
+### 访问
+
+- 本机浏览器打开 `http://localhost:5173`
+- 同局域网设备访问 `http://<服务器IP>:5173`
+- 远程访问需通过 frp/DDNS 暴露端口
+
+### 停止服务
 
 ```bash
-cd frontend
-npm install
-npm run dev -- --host 0.0.0.0
+pkill -f "uvicorn main:app"
+pkill -f "npm run dev"
 ```
-
-### 第五步：使用
-
-- 老人在**本机**打开浏览器 → 访问 `http://localhost:5173`
-- 老人在**同局域网平板**上打开 → 访问 `http://电脑的IP:5173`
-- 子女**远程访问** → 通过 frp/DDNS 暴露端口
 
 ---
 
@@ -140,7 +136,7 @@ pip install -r requirements.txt
 python app.py --host 0.0.0.0 --port 8000
 ```
 
-然后按上面的第三步启动后端、第四步启动前端即可。前端自动连接数字人视频流。
+然后按上面「快速开始」中的步骤启动后端和前端即可。前端自动连接数字人视频流。
 
 ---
 
@@ -154,19 +150,20 @@ ElderTalk 特别针对老年用户的使用习惯进行了优化：
 贴心陪伴：定时问候、天气播报、用药提醒等关怀功能
 自然打断：数字人说话时，用户可随时开口打断
 
-### 一键启动
-```Bash
+### 一键启动（Linux）
 
-# Windows 启动脚本 (启动.bat)
-@echo off
-cd /d "D:\ElderTalk\backend"
-start cmd /k "venv\Scripts\activate && uvicorn main:app --host 0.0.0.0 --port 8010"
-timeout /t 3
-cd /d "D:\ElderTalk\frontend"
-start cmd /k "npm run dev -- --host 0.0.0.0"
-timeout /t 5
-start http://localhost:5173
+```bash
+# 后台启动后端
+cd backend && nohup python -m uvicorn main:app --host 0.0.0.0 --port 8010 > ../backend.log 2>&1 &
+
+# 后台启动前端
+cd ../frontend && nohup npm run dev -- --host 0.0.0.0 > ../frontend.log 2>&1 &
+
+# 验证
+sleep 5 && curl http://localhost:8010/api/v1/health
 ```
+
+Windows 用户使用 `scripts/start_cabinet.ps1`。
 ### 部署建议
 |场景	|配置|
 |------|------|
@@ -237,6 +234,61 @@ curl -X POST http://localhost:8010/api/v1/voice/tts \
 ---
 
 ## 全息屏输出模块
+
+项目支持两种全息展示方案，根据硬件选择：
+
+| 方案 | 硬件 | 分辨率 | 交互 | 文档 |
+|------|------|--------|------|------|
+| 全息仓 | HDMI 显示器 | 1440×2560 竖屏 | 实时 3D + SSE | 见下方 |
+| LED 风扇屏 | LED 旋转灯条 | 512×512 | 预录 MP4 | [HOLOGRAM.md](HOLOGRAM.md) |
+
+### 全息仓双屏模式（推荐）
+
+全息仓通过 HDMI 连接第二显示器，纯黑背景投影成像，支持实时 3D 数字人交互。
+
+**硬件准备：**
+1. 电脑连接第二显示器（HDMI），设为「扩展桌面」
+2. 第二显示器旋转为竖屏（纵向），分辨率设为 1440×2560
+
+**一键启动（Linux）：**
+
+```bash
+# 使用项目提供的启动脚本
+chmod +x scripts/start_cabinet.sh
+./scripts/start_cabinet.sh
+```
+
+脚本会自动启动后端 + 前端，并在主屏打开控制端。
+
+**手动启动：**
+
+```bash
+# 终端 1：启动后端
+cd backend
+python -m uvicorn main:app --host 0.0.0.0 --port 8010
+
+# 终端 2：启动前端
+cd frontend
+npm run dev -- --host 0.0.0.0
+```
+
+**打开副屏（全息仓展示页）：**
+
+```bash
+# Linux
+google-chrome --kiosk --window-position=1920,0 --window-size=1440,2560 --app=http://localhost:5173/#/cabinet
+
+# 或者通过控制面板（/#/hologram）点击「新窗口打开展示页」
+```
+
+> `--window-position=1920,0`：第一个参数（1920）是主显示器宽度，根据实际分辨率调整。
+> 全息仓不需要 `python -m hologram.converter`，直接通过浏览器打开 `/#/cabinet` 即可。
+
+**故障排查**：详见 [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md)，包含白屏/黑屏/字幕不更新/音频无声/口型不工作等常见问题。
+
+### LED 风扇屏模式（传统方案）
+
+以下为 LED 全息风扇屏（预录 MP4 播放）的操作说明。
 
 ### 全息视频转换
 
@@ -393,8 +445,6 @@ ElderTalk/
 │   ├── requirements.txt
 │   └── Dockerfile
 │
-├── docker-compose.yml           # Docker 编排
-│
 ├── hologram/                    # 全息屏适配模块
 │   ├── converter.py                 # 视频转换管道
 │   ├── streamer.py                  # 三模式推流（RTSP/WS/Watch）
@@ -501,7 +551,7 @@ IDLE → LISTENING → THINKING → SPEAKING → IDLE
 参见 [HOLOGRAM_DEVICES.md](HOLOGRAM_DEVICES.md)，推荐 TF 卡播放型（最便宜，约 200-500 元）。
 
 ### Q: 全息仓和 LED 风扇屏有什么区别？
-- **全息仓**（本项目 Session 7）：HDMI 直连第二显示器，竖屏 9:16 2K，Three.js 实时 3D 渲染，支持实时交互（SSE + WebRTC）。详见 [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md)。
+- **全息仓**：HDMI 直连第二显示器，竖屏 9:16 2K，Three.js 实时 3D 渲染，支持实时交互（SSE + WebRTC）。详见 [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md)。
 - **LED 风扇屏**（传统方案）：LED 旋转灯条，512×512 正方形，预录 MP4 视频播放，不支持实时交互。详见 [HOLOGRAM.md](HOLOGRAM.md)。
 
 全息仓不需要 `python -m hologram.converter`，直接通过浏览器 kiosk 模式打开 `/#/cabinet` 即可。
