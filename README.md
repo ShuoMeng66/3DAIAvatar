@@ -282,6 +282,50 @@ google-chrome --kiosk --window-position=1920,0 --window-size=1440,2560 --app=htt
 > `--window-position=1920,0`：第一个参数（1920）是主显示器宽度，根据实际分辨率调整。
 > 全息仓不需要 `python -m hologram.converter`，直接通过浏览器打开 `/#/cabinet` 即可。
 
+### 分布式部署（服务器算力 + 全息仓 PC）
+
+将后端（LLM/TTS）放在 GPU 服务器上，全息仓 PC 仅运行浏览器显示，两者通过局域网连接。
+
+**服务器（算力端）：**
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/ShuoMeng66/3DAIAvatar.git
+cd 3DAIAvatar
+
+# 2. 配置 API Key
+cp .env.example .env
+# 编辑 .env：填入 DASHSCOPE_API_KEY
+
+# 3. 安装并启动后端（监听所有网卡）
+cd backend
+pip install -r requirements.txt
+nohup python -m uvicorn main:app --host 0.0.0.0 --port 8010 > ../backend.log 2>&1 &
+
+# 4. 确认服务器 IP（记下来，PC 端要用）
+hostname -I | awk '{print $1}'
+```
+
+**全息仓 PC（展示端）：**
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/ShuoMeng66/3DAIAvatar.git
+cd 3DAIAvatar
+
+# 2. 安装前端依赖
+cd frontend
+npm install
+
+# 3. 启动前端，指向服务器的后端 API（替换为实际服务器 IP）
+VITE_API_BASE=http://服务器IP:8010 npm run dev -- --host 0.0.0.0
+
+# 4. 打开副屏 kiosk
+google-chrome --kiosk --window-position=1920,0 --window-size=1440,2560 --app=http://localhost:5173/#/cabinet
+```
+
+> PC 端只需安装 Node.js，不需要 GPU、Python、模型文件。所有 AI 计算在服务器完成。
+
 **故障排查**：详见 [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md)，包含白屏/黑屏/字幕不更新/音频无声/口型不工作等常见问题。
 
 ### LED 风扇屏模式（传统方案）
