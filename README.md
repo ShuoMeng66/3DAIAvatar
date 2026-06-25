@@ -1,20 +1,34 @@
-# ElderTalk — 虚拟真人陪聊系统（颐语 / ElderTalk）
+# 颐语 · ElderTalk
 
-面向独居/空巢老人的智能陪聊系统，基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) 动态数字人技术。
+面向独居/空巢老人的 **WebRTC 动态数字人** 陪聊系统，产品名 **颐语**（ElderTalk）。
 
+基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) MuseTalk 实时唇形同步 + 2D 全息仓竖屏展示。
 
+| | |
+|---|---|
+| **主仓库** | https://github.com/ShuoMeng66/ElderTalk |
+| **镜像仓库** | https://github.com/ShuoMeng66/3DAIAvatar （历史名称，与主仓库同步） |
 
-**一句话**：GPU 服务器跑 Linly 数字人引擎，浏览器打开即可与 WebRTC 动态数字人聊天；全息仓竖屏展示 2D 全身形象。
+**一句话**：GPU 服务器运行 Linly 数字人引擎，浏览器打开即可与动态数字人 WebRTC 视频对话；副屏全息仓以 2D 全身形象 kiosk 展示。
 
 ---
 
 ## 功能概览
 
-- **动态数字人**：Linly MuseTalk WebRTC 实时视频 + 口型
-- 语音交互：老人通过语音与数字人自然对话
-- 2D 全息仓：竖屏 kiosk 展示（推荐 `VITE_CABINET_MODE=2d`）
-- 全双工打断、SSE 字幕同步、家属设置页
-- 声音克隆 / 数字人定制（扩展模块）
+- **动态数字人**：Linly MuseTalk WebRTC 实时视频 + 口型（核心能力，不可降级为静态图）
+- **对话驱动**：WebRTC `sessionid` 绑定 Linly `/human`，发消息即 avatar 在视频流中说话
+- **2D 全息仓**：竖屏 1440×2560 kiosk（默认 `VITE_CABINET_MODE=2d`）
+- 语音交互、全双工打断、SSE 字幕同步、家属设置页
+- 声音克隆 / LED 风扇屏 / 3D VRM 实验模式（扩展）
+
+**文档索引**
+
+| 文档 | 说明 |
+|------|------|
+| [docs/deploy/autodl.md](docs/deploy/autodl.md) | AutoDL 部署（含 UDP 8000 映射） |
+| [docs/webrtc-troubleshooting.md](docs/webrtc-troubleshooting.md) | offer 200 无画面排查 |
+| [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md) | 全息仓硬件与双屏 kiosk |
+| [BACKEND.md](BACKEND.md) | API 接口详情 |
 
 ---
 
@@ -23,8 +37,8 @@
 ### Level 1 — 5 分钟验证（无 GPU，占位对话）
 
 ```bash
-git clone https://github.com/ShuoMeng66/3DAIAvatar.git
-cd 3DAIAvatar
+git clone https://github.com/ShuoMeng66/ElderTalk.git
+cd ElderTalk
 
 cp .env.example .env
 # 编辑 .env：填入 LLM_API_KEY
@@ -254,7 +268,7 @@ curl http://localhost:8010/api/v1/voice/list
 # 使用指定声音合成
 curl -X POST http://localhost:8010/api/v1/voice/tts \
   -H "Content-Type: application/json" \
-  -d '{"voice_id":"cosyvoice_a1b2c3d4","text":"你好，我是小暖，今天过得怎么样？"}'
+  -d '{"voice_id":"cosyvoice_a1b2c3d4","text":"你好，我是颐语，今天过得怎么样？"}'
 ```
 
 ---
@@ -265,7 +279,7 @@ curl -X POST http://localhost:8010/api/v1/voice/tts \
 
 | 方案 | 硬件 | 分辨率 | 交互 | 文档 |
 |------|------|--------|------|------|
-| 全息仓 | HDMI 显示器 | 1440×2560 竖屏 | 实时 3D + SSE | 见下方 |
+| 全息仓 | HDMI 显示器 | 1440×2560 竖屏 | 2D WebRTC + SSE | [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md) |
 | LED 风扇屏 | LED 旋转灯条 | 512×512 | 预录 MP4 | [HOLOGRAM.md](HOLOGRAM.md) |
 
 ### 全息仓双屏模式（推荐）
@@ -318,12 +332,12 @@ google-chrome --kiosk --window-position=1920,0 --window-size=1440,2560 --app=htt
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/ShuoMeng66/3DAIAvatar.git
-cd 3DAIAvatar
+git clone https://github.com/ShuoMeng66/ElderTalk.git
+cd ElderTalk
 
 # 2. 配置 API Key
 cp .env.example .env
-# 编辑 .env：填入 DASHSCOPE_API_KEY
+# 编辑 .env：填入 LLM_API_KEY、LLM_BASE_URL（百炼见下方 FAQ）
 
 # 3. 安装并启动后端（监听所有网卡）
 cd backend
@@ -338,8 +352,8 @@ hostname -I | awk '{print $1}'
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/ShuoMeng66/3DAIAvatar.git
-cd 3DAIAvatar
+git clone https://github.com/ShuoMeng66/ElderTalk.git
+cd ElderTalk
 
 # 2. 安装前端依赖
 cd frontend
@@ -509,7 +523,7 @@ ElderTalk/
 │   ├── scripts/                 # 工具脚本
 │   │   └── preprocess_avatar.py     # 数字人形象预处理
 │   ├── prompts/                 # System Prompt
-│   │   └── elder_companion.txt      # 小暖角色设定
+│   │   └── elder_companion.txt      # 颐语角色设定
 │   ├── main.py                   # FastAPI 入口
 │   ├── config.py                 # 配置管理
 │   ├── requirements.txt
@@ -528,7 +542,7 @@ ElderTalk/
 │   │   ├── MANIFEST.json
 │   │   ├── grandma_warm/        # 慈祥奶奶
 │   │   ├── grandpa_kind/        # 慈祥爷爷
-│   │   ├── young_girl/          # 孙女小暖
+│   │   ├── young_girl/          # 孙女形象
 │   │   └── caregiver/           # 护工志愿者
 │   ├── voices/                  # 声音模型
 │   │   ├── MANIFEST.json
@@ -584,7 +598,9 @@ IDLE → LISTENING → THINKING → SPEAKING → IDLE
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/v1/health` | 健康检查 |
+| GET | `/health` | 健康检查 |
+| GET | `/health/full` | Backend + Linly 聚合健康 |
+| POST | `/offer` | WebRTC 信令代理 |
 | POST | `/api/v1/chat/text` | 文字对话 |
 | POST | `/api/v1/chat/voice` | 语音对话（上传音频） |
 | POST | `/api/v1/chat/stream` | SSE 流式对话 |
@@ -604,12 +620,14 @@ IDLE → LISTENING → THINKING → SPEAKING → IDLE
 
 ## 常见问题
 
-### Q: 没有 GPU 能用吗？
-可以。直接用百炼 API 驱动对话（免费，无需 GPU），只是没有真人 3D 数字人视频流，前端显示静态形象。
-如果后面买了带 GPU 的电脑，接上 Linly-Talker 就能自动切换为 3D 数字人。
+### Q: offer 返回 200 但没有视频？
+信令（TCP）已成功，媒体（UDP）未通。AutoDL 必须映射 **8000 UDP**，不能仅靠 SSH 隧道。见 [docs/webrtc-troubleshooting.md](docs/webrtc-troubleshooting.md)。
 
-### Q: 如何申请百炼 API Key？
-访问 https://bailian.console.aliyun.com → 开通模型服务 → 生成 API Key。免费额度充足（有效期到 2099 年）。
+### Q: 没有 GPU 能用吗？
+可以启动占位对话（Level 1），但**无动态数字人视频**。完整体验需 GPU + Linly（Level 2）。
+
+### Q: 如何申请 LLM API Key（百炼 / 通义）？
+访问 https://bailian.console.aliyun.com → 开通模型服务 → 生成 API Key，写入 `.env` 的 `LLM_API_KEY`，并设置 `LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1`。
 
 ### Q: 如何申请和风天气 API Key？
 访问 https://devapi.qweather.com → 注册 → 创建应用 → 获取 API Key（免费版每天 1000 次调用）。
@@ -621,7 +639,7 @@ IDLE → LISTENING → THINKING → SPEAKING → IDLE
 参见 [HOLOGRAM_DEVICES.md](HOLOGRAM_DEVICES.md)，推荐 TF 卡播放型（最便宜，约 200-500 元）。
 
 ### Q: 全息仓和 LED 风扇屏有什么区别？
-- **全息仓**：HDMI 直连第二显示器，竖屏 9:16 2K，Three.js 实时 3D 渲染，支持实时交互（SSE + WebRTC）。详见 [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md)。
+- **全息仓**：HDMI 竖屏 2D WebRTC 数字人 + SSE 字幕，推荐 `VITE_CABINET_MODE=2d`。详见 [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md)。
 - **LED 风扇屏**（传统方案）：LED 旋转灯条，512×512 正方形，预录 MP4 视频播放，不支持实时交互。详见 [HOLOGRAM.md](HOLOGRAM.md)。
 
 全息仓不需要 `python -m hologram.converter`，直接通过浏览器 kiosk 模式打开 `/#/cabinet` 即可。
