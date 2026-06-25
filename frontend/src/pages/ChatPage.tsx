@@ -8,32 +8,55 @@ import { useIdleTimer } from '../hooks/useIdleTimer';
 import { useConversationState, STATE_LABELS } from '../hooks/useConversationState';
 import { useVAD } from '../hooks/useVAD';
 import { triggerInterrupt } from '../services/bargein';
-import { chatText, uploadAudio } from '../services/api';
-import { Send, Circle } from 'lucide-react';
+import { chatText, uploadAudio, healthCheckFull } from '../services/api';
+import { BRAND } from '../config/brand';
+import { Send, Circle, RefreshCw } from 'lucide-react';
 
 export default function ChatPage() {
   const [inputText, setInputText] = useState('');
-  const [subtitle, setSubtitle] = useState('您好，我是小暖，有什么可以帮您的？');
-  const [messages, setMessages] = useState<Array<{role: string; content: string; time: string}>>([
-    { role: 'assistant', content: '您好，我是小暖，有什么可以帮您的？', time: new Date().toISOString() }
+  const [subtitle, setSubtitle] = useState<string>(BRAND.defaultGreeting);
+  const [messages, setMessages] = useState<
+    Array<{ role: string; content: string; time: string }>
+  >([
+    {
+      role: 'assistant',
+      content: BRAND.defaultGreeting,
+      time: new Date().toISOString(),
+    },
   ]);
   const [isRecording, setIsRecording] = useState(false);
+  const [serviceHealth, setServiceHealth] = useState<{
+    backend: boolean;
+    linly: boolean;
+  } | null>(null);
 
   const convState = useConversationState();
+  const {
+    videoRef,
+    connectionState,
+    sessionId,
+    iceState,
+    connect,
+    disconnect,
+  } = useWebRTC();
 
-  // 开发模式使用 WebRTC，生产模式用静态形象
-  const { videoRef, connectionState } = useWebRTC();
+  const finishSpeakingAfter = useCallback(
+    (reply: string, linlyDriven: boolean) => {
+      const ms = linlyDriven
+        ? Math.max(3000, reply.length * 120)
+        : Math.max(1500, reply.length * 100);
+      setTimeout(() => convState.finishSpeaking(), ms);
+    },
+    [convState],
+  );
 
-  // VAD 语音活动检测（在 SPEAKING 状态下持续监听打断）
   const vad = useVAD({
     onSpeechStart: useCallback(() => {
-      // 如果数字人正在说话，触发打断
       if (convState.isSpeaking) {
         handleInterrupt();
       }
     }, [convState.isSpeaking]),
     onSpeechEnd: useCallback(() => {
-      // 语音结束，如果当前是 LISTENING 状态则开始处理
       if (convState.state === 'LISTENING') {
         convState.finishListening();
         setSubtitle('嗯，让我想想...');
@@ -41,105 +64,105 @@ export default function ChatPage() {
     }, [convState.state]),
   });
 
-  // 空闲问候（30 秒）
   useIdleTimer(() => {
     if (convState.state === 'IDLE') {
-      const greeting = '爷爷/奶奶，我在呢，想聊点什么？';
+      const greeting = `${BRAND.persona}在呢，想聊点什么？`;
       setSubtitle(greeting);
-      setMessages(prev => [...prev.slice(-4), { role: 'assistant', content: greeting, time: new Date().toISOString() }]);
+      setMessages((prev) => [
+        ...prev.slice(-4),
+        { role: 'assistant', content: greeting, time: new Date().toISOString() },
+      ]);
     }
   }, 30000);
 
-  // ========== 打断处理 ==========
   const handleInterrupt = useCallback(async () => {
     convState.interrupt();
     setSubtitle('好的，我听着呢');
-    await triggerInterrupt();
-    // 打断后立即切换到 LISTENING 状态
+    await triggerInterrupt(sessionId ?? undefined);
     convState.startListening();
-    // 如果 VAD 未启动，启动它
     if (!vad.isSupported) {
       vad.start();
     }
-  }, [convState, vad]);
+  }, [convState, vad, sessionId]);
 
-  // ========== 文字发送 ==========
   const handleSendText = useCallback(async () => {
-    if (!inputText.trim() || convState.isProcessing) return;
+    const text = inputText.trim();
+    if (!text || convState.isProcessing) return;
 
-    // 添加用户消息
-    const userMsg = { role: 'user' as const, content: inputText, time: new Date().toISOString() };
-    setMessages(prev => [...prev.slice(-4), userMsg]);
+    const userMsg = {
+      role: 'user' as const,
+      content: text,
+      time: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev.slice(-4), userMsg]);
     setInputText('');
 
-    // 状态转换：IDLE → THINKING
     if (convState.state === 'IDLE') {
-      convState.startListening();
-      convState.finishListening();
+      convState.startSpeaking();
     }
     setSubtitle('让我想想...');
 
     try {
-      const res = await chatText(inputText, 'default');
+      const res = await chatText(text, 'default', undefined, sessionId);
       const reply = res.reply || '嗯，我听到了。';
-      
-      // 状态转换：THINKING → SPEAKING → IDLE
+
       convState.startSpeaking();
       setSubtitle(reply);
-      setMessages(prev => [...prev.slice(-4), { role: 'assistant', content: reply, time: new Date().toISOString() }]);
-      
-      // 模拟播放完成后回到 IDLE
-      setTimeout(() => {
-        convState.finishSpeaking();
-      }, reply.length * 100); // 按字数估算播放时间
+      setMessages((prev) => [
+        ...prev.slice(-4),
+        { role: 'assistant', content: reply, time: new Date().toISOString() },
+      ]);
+
+      finishSpeakingAfter(reply, Boolean(res.driven_by_linly));
     } catch {
       setSubtitle('抱歉，网络不太好，请再说一次。');
       convState.reset();
     }
-  }, [inputText, convState]);
+  }, [inputText, convState, sessionId, finishSpeakingAfter]);
 
-  // ========== 语音处理 ==========
-  const handleVoiceToggle = useCallback(async (recording: boolean) => {
-    setIsRecording(recording);
-    if (recording) {
-      // 如果正在 SPEAKING，先打断
-      if (convState.isSpeaking) {
-        await handleInterrupt();
+  const handleVoiceToggle = useCallback(
+    async (recording: boolean) => {
+      setIsRecording(recording);
+      if (recording) {
+        if (convState.isSpeaking) {
+          await handleInterrupt();
+        }
+        convState.startListening();
+        vad.start();
+        setSubtitle('嗯，我听着呢...');
+      } else {
+        convState.finishListening();
+        vad.stop();
+        setSubtitle('让我想想...');
       }
-      convState.startListening();
-      // 启动 VAD
-      vad.start();
-      setSubtitle('嗯，我听着呢...');
-    } else {
-      convState.finishListening();
-      // 停止 VAD 监听
-      vad.stop();
-      setSubtitle('让我想想...');
-    }
-  }, [convState, vad, handleInterrupt]);
+    },
+    [convState, vad, handleInterrupt],
+  );
 
-  const handleVoiceResult = useCallback(async (audioBlob: Blob) => {
-    setSubtitle('正在听...');
-    try {
-      const res = await uploadAudio(audioBlob, 'default');
-      const reply = res.reply || '我听到了您的声音。';
-      
-      convState.startSpeaking();
-      setSubtitle(reply);
-      setMessages(prev => [...prev.slice(-4), { role: 'assistant', content: reply, time: new Date().toISOString() }]);
-      
-      setTimeout(() => {
-        convState.finishSpeaking();
-      }, reply.length * 100);
-    } catch {
-      setSubtitle('抱歉，没听清楚，请再说一次。');
-      convState.reset();
-    }
-  }, [convState]);
+  const handleVoiceResult = useCallback(
+    async (audioBlob: Blob) => {
+      setSubtitle('正在听...');
+      try {
+        const res = await uploadAudio(audioBlob, 'default', sessionId);
+        const reply = res.reply || '我听到了您的声音。';
 
-  // ========== 启动 VAD 持续监听 ==========
+        convState.startSpeaking();
+        setSubtitle(reply);
+        setMessages((prev) => [
+          ...prev.slice(-4),
+          { role: 'assistant', content: reply, time: new Date().toISOString() },
+        ]);
+
+        finishSpeakingAfter(reply, Boolean(res.driven_by_linly));
+      } catch {
+        setSubtitle('抱歉，没听清楚，请再说一次。');
+        convState.reset();
+      }
+    },
+    [convState, sessionId, finishSpeakingAfter],
+  );
+
   useEffect(() => {
-    // 页面加载后启动 VAD 持续监听
     if (vad.isSupported) {
       vad.start();
     }
@@ -148,17 +171,29 @@ export default function ChatPage() {
     };
   }, []);
 
+  useEffect(() => {
+    connect();
+  }, [connect]);
+
+  useEffect(() => {
+    healthCheckFull().then(setServiceHealth);
+    const t = setInterval(() => healthCheckFull().then(setServiceHealth), 20000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
-      {/* 状态指示器 */}
       <div className="flex items-center justify-center gap-2 py-2">
         <Circle
           size={12}
           className={
-            convState.state === 'LISTENING' ? 'text-green-500 animate-pulse' :
-            convState.state === 'SPEAKING' ? 'text-orange-500' :
-            convState.state === 'THINKING' ? 'text-yellow-500 animate-pulse' :
-            'text-gray-400'
+            convState.state === 'LISTENING'
+              ? 'text-green-500 animate-pulse'
+              : convState.state === 'SPEAKING'
+                ? 'text-orange-500'
+                : convState.state === 'THINKING'
+                  ? 'text-yellow-500 animate-pulse'
+                  : 'text-gray-400'
           }
           fill="currentColor"
         />
@@ -167,30 +202,55 @@ export default function ChatPage() {
         </span>
       </div>
 
-      {/* 数字人/形象区 60% */}
-      <div className="flex-1 flex items-center justify-center bg-black rounded-2xl mx-4 mt-1 overflow-hidden" style={{ minHeight: '55%' }}>
-        <AvatarPlayer videoRef={videoRef} connectionState={connectionState} />
+      {serviceHealth && (
+        <div className="mx-4 mb-1 px-3 py-2 rounded-lg bg-black/5 text-xs text-warm-text-light flex flex-wrap gap-3 items-center">
+          <span>API {serviceHealth.backend ? '✓' : '✗'}</span>
+          <span>Linly {serviceHealth.linly ? '✓' : '✗'}</span>
+          <span>WebRTC {connectionState}</span>
+          {sessionId != null && <span>session {sessionId}</span>}
+          {iceState && <span>ICE {iceState}</span>}
+          {(connectionState === 'failed' || connectionState === 'idle') && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 text-warm-primary"
+              onClick={() => {
+                disconnect();
+                connect();
+              }}
+            >
+              <RefreshCw size={12} /> 重连
+            </button>
+          )}
+        </div>
+      )}
+
+      <div
+        className="flex-1 flex items-center justify-center bg-black rounded-2xl mx-4 mt-1 overflow-hidden"
+        style={{ minHeight: '55%' }}
+      >
+        <AvatarPlayer
+          videoRef={videoRef}
+          connectionState={connectionState}
+          iceState={iceState}
+          sessionId={sessionId}
+        />
       </div>
-      
-      {/* 字幕栏 */}
+
       <div className="px-4 py-2">
         <SubtitleBar text={subtitle} />
       </div>
-      
-      {/* 聊天历史（最近3条） */}
+
       <div className="px-4 py-1 flex-shrink-0" style={{ maxHeight: '80px' }}>
         <ChatHistory messages={messages.slice(-3)} />
       </div>
-      
-      {/* 底部操作栏 */}
+
       <div className="flex items-center gap-3 px-4 py-3 bg-white/80 backdrop-blur-sm border-t border-warm-border">
-        {/* 文字输入 */}
         <div className="flex-1 flex gap-2">
           <input
             className="input-large flex-1"
             value={inputText}
-            onChange={e => setInputText(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSendText()}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
             placeholder="打字聊天..."
             disabled={convState.isListening}
           />
@@ -203,8 +263,7 @@ export default function ChatPage() {
             <Send size={28} />
           </button>
         </div>
-        
-        {/* 语音按钮 */}
+
         <VoiceButton
           isRecording={isRecording}
           onToggle={handleVoiceToggle}

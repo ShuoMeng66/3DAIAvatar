@@ -10,11 +10,14 @@ let isInterrupting = false;
 /**
  * 发送打断信号到后端
  */
-async function sendInterrupt(): Promise<boolean> {
+async function sendInterrupt(linlySessionId?: number): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/interrupt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        linly_session_id: linlySessionId ?? undefined,
+      }),
     });
     const data = await res.json();
     return data.status === 'ok';
@@ -24,19 +27,14 @@ async function sendInterrupt(): Promise<boolean> {
   }
 }
 
-/**
- * 触发打断流程
- * 1. 发送 POST /api/v1/interrupt 到后端
- * 2. 停止本地音频播放
- * 3. 返回是否成功
- */
-export async function triggerInterrupt(): Promise<boolean> {
+export async function triggerInterrupt(
+  linlySessionId?: number,
+): Promise<boolean> {
   if (isInterrupting) return false;
   isInterrupting = true;
 
   try {
-    // 发送后端打断信号
-    const success = await sendInterrupt();
+    const success = await sendInterrupt(linlySessionId);
 
     // 停止所有本地播放器中的音频
     stopAllLocalAudio();

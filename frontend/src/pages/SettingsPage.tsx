@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Settings, Save, Trash2, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings, Save, Trash2, Plus, Wifi } from 'lucide-react';
+import { healthCheckFull } from '../services/api';
 
 const DEFAULT_PASSWORD = '123456';
 
@@ -27,6 +28,24 @@ export default function SettingsPage() {
   const [newReminderTime, setNewReminderTime] = useState('08:00');
   const [newReminderText, setNewReminderText] = useState('');
   const [saved, setSaved] = useState(false);
+  const [connTest, setConnTest] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (authenticated) {
+      healthCheckFull().then((h) => {
+        setConnTest(
+          `API ${h.backend ? '正常' : '离线'} · Linly ${h.linly ? '正常' : '离线'}`,
+        );
+      });
+    }
+  }, [authenticated]);
+
+  const runConnectionTest = async () => {
+    const h = await healthCheckFull();
+    setConnTest(
+      `API ${h.backend ? '正常' : '离线'} · Linly ${h.linly ? '正常' : '离线'}`,
+    );
+  };
 
   const handleLogin = () => {
     if (password === DEFAULT_PASSWORD) {
@@ -186,8 +205,23 @@ export default function SettingsPage() {
           className="input-large !h-32"
           value={personaText}
           onChange={e => setPersonaText(e.target.value)}
-          placeholder="自定义小暖的说话风格，如：她喜欢用四川话聊天..."
+          placeholder="自定义颐语的说话风格，如：喜欢用四川话聊天..."
         />
+      </section>
+
+      <section>
+        <h3 className="text-xl font-bold mb-2">连接测试</h3>
+        <p className="text-warm-text-light text-base mb-2">
+          {connTest ?? '尚未检测'}
+        </p>
+        <button
+          type="button"
+          className="btn-primary w-full flex items-center justify-center gap-2"
+          onClick={runConnectionTest}
+        >
+          <Wifi size={24} />
+          测试 API / Linly
+        </button>
       </section>
 
       {/* 保存按钮 */}

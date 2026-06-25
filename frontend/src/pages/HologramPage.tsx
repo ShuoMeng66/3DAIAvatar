@@ -1,26 +1,38 @@
 /**
- * HologramPage — 全息仓控制面板
- *
- * 左栏：控制端 /chat 预览
- * 右栏：展示端 /cabinet 预览（9:16 黑框）
- * 按钮：新窗口打开、复制副屏启动命令
- * 折叠区：高级 / LED 风扇模式（保留原有功能）
+ * HologramPage — 全息仓控制面板 + AutoDL 部署向导
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { healthCheckFull } from '../services/api';
+import { BRAND } from '../config/brand';
+import '../styles/hologram.css';
 
 const KIOSK_COMMAND = `chrome.exe --kiosk --window-position=1920,0 --window-size=1440,2560 --app=http://localhost:5173/#/cabinet`;
+
+const DEPLOY_STEPS = [
+  'AutoDL 选 PyTorch 2.1 + Python 3.10，映射端口 8000/8010/5173',
+  '安装 Linly：third_party/Linly-Talker-Stream/scripts/setup-env.sh',
+  '配置 .env：LLM_API_KEY、LINLY_STREAM_URL=http://127.0.0.1:8000',
+  '启动 Linly → backend → frontend（见 docs/deploy/autodl.md）',
+  '运行 scripts/check_webrtc.sh 验证信令与 UDP',
+  '副屏 Chrome kiosk 打开 /#/cabinet（VITE_CABINET_MODE=2d）',
+];
 
 export default function HologramPage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [toast, setToast] = useState('');
+  const [health, setHealth] = useState<{ backend: boolean; linly: boolean } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    healthCheckFull().then(setHealth);
+    const t = setInterval(() => healthCheckFull().then(setHealth), 15000);
+    return () => clearInterval(t);
+  }, []);
 
   const handleOpenCabinet = () => {
-    window.open(
-      '/#/cabinet',
-      '_blank',
-      'width=1440,height=2560',
-    );
+    window.open('/#/cabinet', '_blank', 'width=1440,height=2560');
   };
 
   const handleCopyCommand = async () => {
@@ -34,128 +46,68 @@ export default function HologramPage() {
   };
 
   return (
-    <div style={{ padding: '20px', height: '100vh', display: 'flex', flexDirection: 'column', background: '#0a0a0a', color: '#ccc' }}>
-      {/* 标题栏 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', flexShrink: 0 }}>
-        <h1 style={{ margin: 0, fontSize: '22px', color: '#fff' }}>全息仓控制面板</h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={handleOpenCabinet} style={btnStyle}>
-            新窗口打开展示页
-          </button>
-          <button onClick={handleCopyCommand} style={btnStyle}>
-            复制副屏启动命令
-          </button>
-        </div>
-        {toast && (
-          <span style={{ color: '#4ade80', fontSize: '13px' }}>{toast}</span>
-        )}
-      </div>
+    <div className="hologram-page">
+      <header className="hologram-header">
+        <h1>{BRAND.nameZh} 全息仓</h1>
+        {toast && <span className="hologram-toast">{toast}</span>}
+      </header>
 
-      {/* 双栏预览 */}
-      <div style={{ display: 'flex', gap: '12px', flex: 1, minHeight: 0 }}>
-        {/* 左栏：控制端 */}
-        <div style={{ flex: '3', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: '14px', color: '#888', marginBottom: '6px' }}>
-            控制端 /chat
-          </div>
-          <iframe
-            src="/#/chat"
-            style={{
-              flex: 1,
-              border: '1px solid #333',
-              borderRadius: '8px',
-              background: '#111',
-            }}
-            title="控制端预览"
-          />
+      {health && (
+        <div className="hologram-status">
+          <span className={health.backend ? 'ok' : 'err'}>
+            API {health.backend ? '正常' : '离线'}
+          </span>
+          <span className={health.linly ? 'ok' : 'err'}>
+            Linly {health.linly ? '正常' : '离线'}
+          </span>
         </div>
+      )}
 
-        {/* 右栏：展示端（9:16 黑框） */}
-        <div style={{ flex: '2', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: '14px', color: '#888', marginBottom: '6px' }}>
-            展示端 /cabinet（9:16）
-          </div>
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'center',
-            background: '#000',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            border: '1px solid #333',
-          }}>
-            <iframe
-              src="/#/cabinet"
-              style={{
-                width: '100%',
-                maxWidth: '400px',
-                height: '100%',
-                border: 'none',
-                background: '#000',
-              }}
-              title="展示端预览"
-            />
-          </div>
-        </div>
-      </div>
+      <section className="hologram-wizard">
+        <h2>AutoDL 部署步骤</h2>
+        <ol>
+          {DEPLOY_STEPS.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+        <p className="hologram-note">
+          offer 200 无画面 = 信令 OK、UDP 未通。详见 docs/deploy/autodl.md
+        </p>
+      </section>
 
-      {/* 高级 / LED 风扇模式（折叠区） */}
-      <div style={{ marginTop: '16px', flexShrink: 0 }}>
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          style={{
-            ...btnStyle,
-            background: 'transparent',
-            border: '1px solid #444',
-            color: '#888',
-          }}
-        >
-          {showAdvanced ? '收起' : '展开'} 高级 / LED 风扇模式
+      <div className="hologram-actions">
+        <button type="button" onClick={handleOpenCabinet}>
+          新窗口打开展示页
         </button>
-
-        {showAdvanced && (
-          <div style={{
-            marginTop: '12px',
-            padding: '16px',
-            background: '#111',
-            borderRadius: '8px',
-            border: '1px solid #333',
-            fontSize: '14px',
-            color: '#aaa',
-            lineHeight: 1.8,
-          }}>
-            <p style={{ color: '#ff9800', margin: '0 0 8px' }}>
-              以下为 LED 全息风扇屏功能（非全息仓），保留原有操作。
-            </p>
-            <p>
-              LED 风扇屏使用 <code>hologram/converter.py</code> 生成 MP4，
-              通过 TF 卡 / WiFi APP / RTSP 推流到 LED 风扇设备。
-            </p>
-            <p>
-              全息仓（HDMI 直连显示器）不需要此模块，直接使用上方控制面板。
-            </p>
-            <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-              <li>分辨率：512 / 1024</li>
-              <li>格式：MP4 (H.264)，黑底 #000000</li>
-              <li>推流：TF 卡 / WiFi APP / RTSP</li>
-            </ul>
-            <p style={{ color: '#888', fontSize: '12px' }}>
-              详细说明见 <a href="https://github.com/ShuoMeng66/3DAIAvatar/blob/main/HOLOGRAM.md" style={{ color: '#64b5f6' }}>HOLOGRAM.md</a>
-            </p>
-          </div>
-        )}
+        <button type="button" onClick={handleCopyCommand}>
+          复制副屏启动命令
+        </button>
       </div>
+
+      <div className="hologram-preview">
+        <div className="hologram-preview-col">
+          <span>控制端 /chat</span>
+          <iframe src="/#/chat" title="控制端预览" />
+        </div>
+        <div className="hologram-preview-col hologram-preview-col--cabinet">
+          <span>展示端 /cabinet</span>
+          <iframe src="/#/cabinet" title="展示端预览" />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="hologram-advanced-toggle"
+        onClick={() => setShowAdvanced(!showAdvanced)}
+      >
+        {showAdvanced ? '收起' : '高级 / LED 风扇模式'}
+      </button>
+
+      {showAdvanced && (
+        <div className="hologram-advanced">
+          <p>LED 风扇全息模式请见 HOLOGRAM.md；2D 全息仓推荐使用 WebRTC 2d 模式。</p>
+        </div>
+      )}
     </div>
   );
 }
-
-const btnStyle: React.CSSProperties = {
-  padding: '8px 16px',
-  borderRadius: '6px',
-  border: 'none',
-  background: '#2563eb',
-  color: '#fff',
-  cursor: 'pointer',
-  fontSize: '14px',
-  whiteSpace: 'nowrap',
-};

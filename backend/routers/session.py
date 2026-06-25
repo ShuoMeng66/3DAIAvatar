@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/v1/session", tags=["会话管理"])
 _MOCK_HISTORY = {
     "session_123": [
         {"role": "user", "content": "你好", "time": "2026-06-23T10:00:00"},
-        {"role": "assistant", "content": "您好，我是小暖，今天过得怎么样？", "time": "2026-06-23T10:00:05"},
+        {"role": "assistant", "content": "您好，我是颐语，今天过得怎么样？", "time": "2026-06-23T10:00:05"},
         {"role": "user", "content": "今天天气不错", "time": "2026-06-23T10:01:00"},
         {"role": "assistant", "content": "是啊，天气好心情也好。您有没有出去走走晒晒太阳？", "time": "2026-06-23T10:01:05"},
     ],

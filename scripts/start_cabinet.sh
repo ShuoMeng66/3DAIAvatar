@@ -31,7 +31,7 @@ FRONTEND_PID=$!
 echo "[3/4] 等待服务就绪..."
 for i in $(seq 1 15); do
     sleep 2
-    if curl -s "http://localhost:$BACKEND_PORT/api/v1/health" > /dev/null 2>&1; then
+    if curl -s "http://localhost:$BACKEND_PORT/health" > /dev/null 2>&1; then
         break
     fi
     if [ $i -eq 15 ]; then

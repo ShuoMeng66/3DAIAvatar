@@ -40,7 +40,7 @@ async def chat_stream(request: Request):
 
     async def generate():
         # 占位实现：模拟流式输出
-        reply = f"您好，我是小暖，您说的「{text}」我听到了。"
+        reply = f"您好，我是颐语，您说的「{text}」我听到了。"
         
         # 逐字输出
         for char in reply:

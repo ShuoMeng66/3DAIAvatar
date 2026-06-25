@@ -1,20 +1,18 @@
 /**
  * useCabinetSync — 全息仓 SSE 同步 Hook
- *
- * 订阅后端 /api/v1/cabinet/events SSE 事件流，
- * 实时接收字幕、音频、打断等同步事件。
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { API_BASE } from '../services/config';
 
 export interface CabinetSyncState {
   subtitle: string;
   audioUrl: string | null;
   isSpeaking: boolean;
   isInterrupted: boolean;
+  linlyDriven: boolean;
 }
 
-const SSE_URL = 'http://localhost:8010/api/v1/cabinet/events';
 const RECONNECT_DELAY = 3000;
 
 export function useCabinetSync() {
@@ -23,6 +21,7 @@ export function useCabinetSync() {
     audioUrl: null,
     isSpeaking: false,
     isInterrupted: false,
+    linlyDriven: false,
   });
 
   const esRef = useRef<EventSource | null>(null);
@@ -30,12 +29,14 @@ export function useCabinetSync() {
   const mountedRef = useRef(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const sseUrl = `${API_BASE}/api/v1/cabinet/events`;
+
   const connect = useCallback(() => {
     if (esRef.current) {
       esRef.current.close();
     }
 
-    const es = new EventSource(SSE_URL);
+    const es = new EventSource(sseUrl);
     esRef.current = es;
 
     es.addEventListener('subtitle', (e) => {
@@ -45,10 +46,12 @@ export function useCabinetSync() {
 
     es.addEventListener('speak_start', (e) => {
       const data = JSON.parse(e.data);
+      const linlyDriven = Boolean(data.linly_driven);
       setState((prev) => ({
         ...prev,
-        audioUrl: data.audio_url,
+        audioUrl: linlyDriven ? null : data.audio_url,
         isSpeaking: true,
+        linlyDriven,
         subtitle: data.text || prev.subtitle,
       }));
     });
@@ -58,7 +61,6 @@ export function useCabinetSync() {
     });
 
     es.addEventListener('interrupt', () => {
-      // 停止音频播放
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -69,17 +71,11 @@ export function useCabinetSync() {
         audioUrl: null,
         isInterrupted: true,
       }));
-      // 重置打断标记
       setTimeout(() => {
         if (mountedRef.current) {
           setState((prev) => ({ ...prev, isInterrupted: false }));
         }
       }, 500);
-    });
-
-    es.addEventListener('state', (e) => {
-      const data = JSON.parse(e.data);
-      console.log('[CabinetSync] SSE 已连接:', data);
     });
 
     es.onerror = () => {
@@ -89,7 +85,7 @@ export function useCabinetSync() {
         reconnectTimerRef.current = setTimeout(connect, RECONNECT_DELAY);
       }
     };
-  }, []);
+  }, [sseUrl]);
 
   useEffect(() => {
     mountedRef.current = true;

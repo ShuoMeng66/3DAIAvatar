@@ -26,6 +26,7 @@ export type ConversationEvent =
 const TRANSITIONS: Record<ConversationState, Partial<Record<ConversationEvent, ConversationState>>> = {
   IDLE: {
     START_LISTENING: 'LISTENING',
+    START_SPEAKING: 'SPEAKING',
   },
   LISTENING: {
     FINISH_LISTENING: 'THINKING',

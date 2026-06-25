@@ -1,0 +1,9 @@
+- [x] `useWebRTC.ts` cleanup 函数重置 `connectingRef.current = false`
+- [x] `useWebRTC.ts` catch 分支输出 `console.error` 而非静默吞错
+- [x] `webrtc.ts` 使用 `addTransceiver` + `createOffer()`（与手动测试一致）
+- [x] `webrtc.ts` 有 `console.debug` 打点（sendOffer 前后）
+- [x] `webrtc.ts` 错误时 `console.error` + rethrow
+- [x] `api.ts` `sendOffer` 检查 `res.ok`，非 200 时 throw
+- [x] `ChatPage.tsx` 文字发送不走 THINKING 状态，直接 IDLE → SPEAKING
+- [x] `CabinetPage.tsx` 健康检查 URL 正确（`/health`）
+- [x] TypeScript 编译零错误

@@ -1,0 +1,36 @@
+---
+description: ElderTalk WebRTC 与 AutoDL 部署约束
+globs: frontend/src/**/*webrtc*,frontend/src/hooks/useWebRTC.ts,backend/main.py,backend/services/linly_client.py,docs/deploy/**
+alwaysApply: false
+---
+
+# ElderTalk WebRTC 规则
+
+## 信令 vs 媒体
+
+- `POST /offer` 走 TCP（可经 SSH 隧道 8010 代理）
+- 视频 RTP 走 **UDP**，远程必须映射 Linly **8000**
+- 「offer 200 无画面」优先查 UDP，不是 offer 路径
+
+## 前端
+
+- `<video>` 必须在 `connect()` 前挂载；用 `pendingStreamRef` 补绑
+- 保存 Linly `sessionid`，chat API 传 `linly_session_id`
+- ICE `connected` **和** `completed` 都要处理
+- SDP：与 Linly 官方一致用 `addTransceiver` recvonly
+
+## 后端
+
+- `/offer` 校验 answer 含 `sdp` + `type: answer`
+- Linly 可用时 chat 走 `/human`，SSE 标 `linly_driven: true`
+- `LINLY_STREAM_URL` 指向与 Linly 同机的地址（通常 `http://127.0.0.1:8000`）
+
+## 全息仓
+
+- 默认 `VITE_CABINET_MODE=2d`
+- kiosk：`VITE_KIOSK_CHROME=false`
+
+## 文档
+
+- AutoDL：[docs/deploy/autodl.md](../../docs/deploy/autodl.md)
+- 排查：[docs/webrtc-troubleshooting.md](../../docs/webrtc-troubleshooting.md)

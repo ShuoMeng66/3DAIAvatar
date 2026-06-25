@@ -1,11 +1,7 @@
 /* ============================================================
- * cabinet.css — 全息仓展示页样式
- *
- * 全息仓 = 竖屏 9:16 2K（1440×2560），HDMI 直连第二显示器。
- * 背景必须是纯黑 #000000，不是白底。
+ * cabinet.css — 2D 全息仓 kiosk 样式
  * ============================================================ */
 
-/* 页面根容器：全屏纯黑 9:16 */
 .cabinet-page {
   width: 100vw;
   height: 100vh;
@@ -18,48 +14,72 @@
   font-family: 'Noto Sans SC', system-ui, sans-serif;
 }
 
-/* 顶部 8%：标题 + 连接状态 */
+.cabinet-page--kiosk .cabinet-header {
+  display: none;
+}
+
+.cabinet-page--kiosk .cabinet-scene {
+  height: 100%;
+}
+
+.cabinet-page--kiosk .cabinet-subtitle-area {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: auto;
+  min-height: 16%;
+  padding: 24px 8% 32px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
+  z-index: 20;
+  pointer-events: none;
+}
+
 .cabinet-header {
-  height: 8%;
+  height: 6%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   position: relative;
+  z-index: 15;
 }
+
 .cabinet-header-title {
-  font-size: 24px;
-  color: rgba(255, 255, 255, 0.3);
-  font-weight: 400;
+  font-family: 'Noto Serif SC', 'Noto Sans SC', serif;
+  font-size: 22px;
+  color: rgba(78, 205, 196, 0.6);
+  font-weight: 500;
+  letter-spacing: 0.12em;
 }
+
 .cabinet-header-status {
   position: absolute;
   right: 24px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.2);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.25);
 }
 
-/* 中间 72%：3D 场景区（Canvas 容器） */
 .cabinet-scene {
-  height: 72%;
-  flex-shrink: 0;
+  flex: 1;
   position: relative;
   overflow: hidden;
   background: #000000;
 }
+
 .cabinet-scene canvas {
   display: block;
 }
 
-/* 底部 20%：字幕区 */
 .cabinet-subtitle-area {
-  height: 20%;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 8%;
+  min-height: 16%;
 }
+
 .cabinet-subtitle {
   font-size: 36px;
   font-weight: 700;
@@ -69,45 +89,47 @@
   max-width: 100%;
   overflow-wrap: break-word;
   word-break: break-word;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
 }
 
-/* 2D 视频层（全屏模式）：纯黑底，居中 */
 .cabinet-video-layer {
   position: absolute;
   inset: 0;
   background: #000000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 5;
 }
-.cabinet-video-layer video {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
+
+.cabinet-video-layer--hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
-/* PiP 小窗（auto 模式：右下角叠加） */
+.cabinet-video-layer video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
 .cabinet-pip {
   position: absolute;
   right: 16px;
   bottom: 16px;
   width: 30%;
   aspect-ratio: 9 / 16;
-  border-radius: 12px;
   overflow: hidden;
   background: #000000;
   z-index: 10;
-  box-shadow: 0 0 16px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(78, 205, 196, 0.2);
 }
+
 .cabinet-pip video {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-/* 连接失败提示 */
 .cabinet-error {
   position: absolute;
   inset: 0;
@@ -120,4 +142,91 @@
   font-size: 24px;
   text-align: center;
   z-index: 10;
+}
+
+/* 全息框 bezel */
+.cabinet-bezel {
+  position: absolute;
+  inset: 2%;
+  pointer-events: none;
+  z-index: 12;
+  border: 1px solid rgba(78, 205, 196, 0.15);
+}
+
+.cabinet-bezel-corner {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: #4ecdc4;
+  border-style: solid;
+}
+
+.cabinet-bezel-corner--tl {
+  top: 0;
+  left: 0;
+  border-width: 2px 0 0 2px;
+}
+
+.cabinet-bezel-corner--tr {
+  top: 0;
+  right: 0;
+  border-width: 2px 2px 0 0;
+}
+
+.cabinet-bezel-corner--bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 2px 2px;
+}
+
+.cabinet-bezel-corner--br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 2px 2px 0;
+}
+
+.cabinet-bezel-top {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: rgba(78, 205, 196, 0.5);
+  text-transform: uppercase;
+}
+
+.cabinet-bezel-live::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ecdc4;
+  margin-right: 6px;
+  vertical-align: middle;
+  animation: cabinet-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cabinet-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.cabinet-room-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 40%),
+    #000000;
+  z-index: 1;
+  pointer-events: none;
 }

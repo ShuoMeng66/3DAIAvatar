@@ -1,0 +1,6 @@
+- [ ] PyTorch 2.5.0+cu124 导入成功，CUDA 可用
+- [ ] mmcv 2.2.0 + mmdet 3.1.0 + mmpose 1.3.2 全部导入成功
+- [ ] 所有核心依赖（aiohttp, av, edge-tts, librosa, transformers, numpy, cv2 等）都存在
+- [ ] Linly-Talker 8000 端口监听中，/health 返回 OK
+- [ ] ElderTalk 后端 8010 端口监听中，/health 返回 OK
+- [ ] 端口冲突修复完成（Linly:8000，ElderTalk:8010）

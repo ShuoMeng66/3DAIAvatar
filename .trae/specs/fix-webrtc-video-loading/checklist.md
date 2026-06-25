@@ -1,0 +1,9 @@
+- [x] `backend/main.py` 中 /offer 代理使用 `verify=False` 和 timeout=30s
+- [x] `backend/config.py` 默认 LINLY_STREAM_URL 为 `https://127.0.0.1:8000`
+- [x] `.env.example` 中 LINLY_STREAM_URL 为 `https://127.0.0.1:8000`
+- [x] `api.ts` sendOffer 路径为 `/offer`（非 `/api/v1/offer`）
+- [x] `api.ts` healthCheck 路径为 `/health`（非 `/api/v1/health`）
+- [x] `ChatPage.tsx` 在 useEffect 中调用 `connect()`
+- [x] `AvatarPlayer.tsx` idle 状态显示「未连接」，failed 显示「连接失败，请检查 Linly 服务」
+- [x] `CabinetPage.tsx` 健康检查使用 `/health`
+- [x] TypeScript 编译零错误

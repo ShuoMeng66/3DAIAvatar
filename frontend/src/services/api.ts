@@ -9,7 +9,9 @@ import { API_BASE } from './config';
 interface ChatResponse {
   reply: string;
   session_id?: string;
+  linly_session_id?: number;
   status: string;
+  driven_by_linly?: boolean;
 }
 
 /**
@@ -18,12 +20,18 @@ interface ChatResponse {
 export async function chatText(
   text: string,
   sessionId: string = 'default',
-  history?: Array<{ role: string; content: string }>
+  history?: Array<{ role: string; content: string }>,
+  linlySessionId?: number | null,
 ): Promise<ChatResponse> {
   const res = await fetch(`${API_BASE}/api/v1/chat/text`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, session_id: sessionId, history }),
+    body: JSON.stringify({
+      text,
+      session_id: sessionId,
+      history,
+      linly_session_id: linlySessionId ?? undefined,
+    }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -37,11 +45,15 @@ export async function chatText(
  */
 export async function uploadAudio(
   audioBlob: Blob,
-  sessionId: string = 'default'
+  sessionId: string = 'default',
+  linlySessionId?: number | null,
 ): Promise<ChatResponse> {
   const formData = new FormData();
   formData.append('audio', audioBlob, 'recording.wav');
   formData.append('session_id', sessionId);
+  if (linlySessionId != null) {
+    formData.append('linly_session_id', String(linlySessionId));
+  }
 
   const res = await fetch(`${API_BASE}/api/v1/chat/voice`, {
     method: 'POST',
@@ -125,7 +137,7 @@ export async function synthesizeSpeech(text: string): Promise<ArrayBuffer | null
  */
 export async function healthCheck(): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/health`);
+    const res = await fetch(`${API_BASE}/health`);
     const data = await res.json();
     return data.status === 'ok';
   } catch {
@@ -134,16 +146,42 @@ export async function healthCheck(): Promise<boolean> {
 }
 
 /**
- * WebRTC Offer（仅本地开发环境使用）
+ * 聚合健康检查（backend + Linly）
+ */
+export async function healthCheckFull(): Promise<{
+  backend: boolean;
+  linly: boolean;
+}> {
+  try {
+    const res = await fetch(`${API_BASE}/health/full`);
+    if (!res.ok) return { backend: false, linly: false };
+    return res.json();
+  } catch {
+    return { backend: false, linly: false };
+  }
+}
+
+export interface OfferResponse {
+  sdp: string;
+  type: string;
+  sessionid?: number;
+}
+
+/**
+ * WebRTC Offer
  */
 export async function sendOffer(
   sdp: string,
   type: string
-): Promise<{ sdp: string; type: string }> {
-  const res = await fetch(`${API_BASE}/api/v1/offer`, {
+): Promise<OfferResponse> {
+  const res = await fetch(`${API_BASE}/offer`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sdp, type }),
   });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`sendOffer failed ${res.status}: ${text}`);
+  }
   return res.json();
 }

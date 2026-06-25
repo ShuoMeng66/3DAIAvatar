@@ -1,0 +1,5 @@
+- [x] `webrtc.ts` 不再包含 `addTransceiver` 调用
+- [x] `webrtc.ts` `createOffer` 使用 `offerToReceiveAudio: true, offerToReceiveVideo: true`
+- [x] `useWebRTC.ts` `connect()` 在 `connecting` 或 `connected` 状态下拒绝重复调用
+- [x] `HOLOGRAM_CABINET.md` 包含远程部署 WebRTC 注意事项（SSH 隧道不转发 UDP）
+- [x] TypeScript 编译零错误

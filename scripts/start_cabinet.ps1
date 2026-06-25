@@ -38,7 +38,7 @@ do {
     Start-Sleep -Seconds 2
     $waited += 2
     try {
-        $health = Invoke-RestMethod -Uri "http://localhost:$BACKEND_PORT/api/v1/health" -TimeoutSec 2 -ErrorAction SilentlyContinue
+        $health = Invoke-RestMethod -Uri "http://localhost:$BACKEND_PORT/health" -TimeoutSec 2 -ErrorAction SilentlyContinue
         if ($health) { break }
     } catch {}
 } while ($waited -lt $maxWait)

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { BRAND } from '../../config/brand';
 
 interface CabinetSubtitleProps {
   text?: string;
@@ -31,7 +32,7 @@ export default function CabinetSubtitle({ text = '', visible = true }: CabinetSu
         className="cabinet-subtitle"
         style={{ textShadow: '0 0 12px rgba(255, 255, 255, 0.3)' }}
       >
-        {displayText || '小暖在听...'}
+        {displayText || `${BRAND.listeningHint}`}
       </p>
     </div>
   );

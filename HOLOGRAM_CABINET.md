@@ -109,9 +109,52 @@ npm run dev -- --host 0.0.0.0
 - 主屏打开 `http://localhost:5173/#/chat`
 - 通过控制面板（`/#/hologram`）的「新窗口打开展示页」按钮打开副屏
 
-## 6. 故障排查
+## 6. 远程部署注意事项
 
-### 6.1 副屏显示白屏/白底
+### 6.1 架构说明
+
+分布式部署时，Linly-Talker-Stream（MuseTalk 数字人引擎）运行在远程 GPU 服务器（如 AutoDL），全息仓 PC 通过浏览器访问前端页面。WebRTC 视频流需要 UDP 直连服务器。
+
+### 6.2 SSH 隧道的局限性
+
+SSH 隧道（如 `ssh -L 8000:localhost:8000`）仅转发 TCP 流量，**无法转发 WebRTC 所需的 UDP 流量**。因此：
+
+- SSH 隧道可以用于转发后端 API（端口 8010）
+- SSH 隧道**不能**用于 WebRTC 视频流（端口 8000）
+- 远程部署 WebRTC 必须让全息仓 PC 直接访问服务器的 8000 端口
+
+### 6.3 AutoDL 端口映射
+
+如果使用 AutoDL 服务器，需要将 8000 端口映射到公网：
+
+1. 在 AutoDL 控制台 → 实例管理 → 更多 → 端口映射
+2. 添加端口映射：`8000` → 公网端口（自动分配）
+3. 获取公网访问地址（如 `http://xxx.autodl.xxx:xxxxx`）
+4. 在 ElderTalk 后端 `.env` 中配置 `LINLY_STREAM_URL` 指向该公网地址
+
+### 6.4 本机测试不受影响
+
+如果在 AutoDL 服务器本机浏览器中测试（如通过 AutoDL 自带的 JupyterLab 代理），不需要额外配置端口映射，WebRTC 可正常连接 `localhost:8000`。
+
+### 6.5 offer 200 但无画面（决策树）
+
+```
+POST /offer 是否 200？
+├─ 否 → Linly 未启动 / LINLY_STREAM_URL 错误 / backend 代理失败
+└─ 是 → 信令 OK，查媒体层
+    ├─ chrome://webrtc-internals → ICE failed
+    │   → AutoDL 必须映射 8000 UDP；SSH 隧道不能传视频
+    ├─ ICE connected，无 video track
+    │   → answer 缺 sdp；运行 scripts/check_webrtc.sh
+    └─ 有 track，UI 仍黑
+        → 确认 VITE_CABINET_MODE=2d；/chat 页 video 是否挂载
+```
+
+完整 AutoDL 步骤见 [docs/deploy/autodl.md](docs/deploy/autodl.md)。
+
+## 7. 故障排查
+
+### 7.1 副屏显示白屏/白底
 
 **原因**：全息仓页面背景必须是纯黑 `#000000`。白屏说明背景色丢失。
 
@@ -120,7 +163,7 @@ npm run dev -- --host 0.0.0.0
 - 检查浏览器是否开启了「强制深色模式」导致颜色反转
 - 确认环境变量 `VITE_CABINET_BG=#000000` 已设置
 
-### 6.2 副屏无显示/黑屏
+### 7.2 副屏无显示/黑屏
 
 **原因**：3D 场景或 VRM 模型加载失败。
 
@@ -130,16 +173,16 @@ npm run dev -- --host 0.0.0.0
 - 如果 VRM 未下载，页面会显示黑底错误提示「角色加载失败」
 - 可临时设置 `VITE_CABINET_MODE=2d` 切换到 2D 视频降级模式
 
-### 6.3 副屏字幕不更新
+### 7.3 副屏字幕不更新
 
 **原因**：SSE 连接失败或后端未启动。
 
 **解决**：
-- 确认后端服务已启动（`http://localhost:8010/api/v1/health`）
+- 确认后端服务已启动（`http://localhost:8010/health`）
 - 查看浏览器控制台是否有 SSE 连接错误
 - 确认 `/chat` 端发送消息后，后端 `/offer` 端点正常响应
 
-### 6.4 副屏音频无声
+### 7.4 副屏音频无声
 
 **原因**：TTS 音频生成失败或浏览器自动播放策略限制。
 
@@ -148,7 +191,7 @@ npm run dev -- --host 0.0.0.0
 - 检查 `backend/data/audio/` 目录是否有生成的 WAV 文件
 - Chrome kiosk 模式通常允许自动播放；如仍被阻止，手动点击页面任意位置激活
 
-### 6.5 口型动画不工作
+### 7.5 口型动画不工作
 
 **原因**：VRM 模型未加载或不支持对应 blend shapes。
 
@@ -157,7 +200,7 @@ npm run dev -- --host 0.0.0.0
 - 部分 VRM 模型可能不支持全部口型（a/i/u/e/o），这是正常现象
 - 口型动画为 volume-based 简单方案，非真实音素同步
 
-## 7. 与 LED 风扇屏的区别
+## 8. 与 LED 风扇屏的区别
 
 | 特性 | 全息仓（本项目） | LED 风扇屏 |
 |------|-----------------|-----------|
@@ -171,7 +214,7 @@ npm run dev -- --host 0.0.0.0
 
 **全息仓不需要 `python -m hologram.converter` 或 `hologram/streamer.py`。**
 
-## 8. 当前状态
+## 9. 当前状态
 
 - [x] 黑底 `/cabinet` 骨架（7A）
 - [x] Three.js 3D 场景 + VRM 角色（7B）

@@ -124,9 +124,21 @@ async def broadcast_subtitle(text: str):
     await event_bus.broadcast("subtitle", {"text": text})
 
 
-async def broadcast_speak_start(audio_url: str, text: str = ""):
-    """广播开始播放 TTS"""
-    await event_bus.broadcast("speak_start", {"audio_url": audio_url, "text": text})
+async def broadcast_speak_start(
+    audio_url: str = "",
+    text: str = "",
+    *,
+    linly_driven: bool = False,
+):
+    """广播开始播放（TTS 或 Linly WebRTC）"""
+    await event_bus.broadcast(
+        "speak_start",
+        {
+            "audio_url": audio_url,
+            "text": text,
+            "linly_driven": linly_driven,
+        },
+    )
 
 
 async def broadcast_speak_end():

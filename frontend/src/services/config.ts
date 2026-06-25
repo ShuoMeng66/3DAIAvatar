@@ -6,3 +6,5 @@
  */
 
 export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8010';
+export const LINLY_PUBLIC_URL =
+  import.meta.env.VITE_LINLY_PUBLIC_URL || '';

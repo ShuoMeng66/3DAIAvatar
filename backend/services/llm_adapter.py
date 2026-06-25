@@ -94,7 +94,7 @@ class LLMAdapter:
         # 简单的占位回复逻辑
         greetings = ["你好", "您好", "嗨", "早上好", "下午好", "晚上好"]
         if any(g in message for g in greetings):
-            return "您好呀，我是小暖。今天过得怎么样？吃饭了吗？"
+            return "您好呀，我是颐语。今天过得怎么样？吃饭了吗？"
         
         weather_keywords = ["天气", "气温", "冷", "热", "下雨", "刮风"]
         if any(k in message for k in weather_keywords):

@@ -11,21 +11,21 @@ router = APIRouter(prefix="/api/v1/avatar", tags=["数字人形象"])
 DEFAULT_AVATARS = [
     {
         "id": "avatar_01",
-        "name": "小暖（默认）",
+        "name": "颐语（默认）",
         "description": "温暖亲切的女性护工形象",
         "preview_url": "/assets/avatars/default/avatar_01.jpg",
         "engine": "musetalk",
     },
     {
         "id": "avatar_02",
-        "name": "小暖（备选）",
+        "name": "颐语（备选）",
         "description": "温柔笑容的中年女性形象",
         "preview_url": "/assets/avatars/default/avatar_02.jpg",
         "engine": "musetalk",
     },
     {
         "id": "avatar_03",
-        "name": "小暖（经典）",
+        "name": "颐语（经典）",
         "description": "慈祥的老年女性形象",
         "preview_url": "/assets/avatars/default/avatar_03.jpg",
         "engine": "sadtalker",
@@ -66,7 +66,7 @@ async def avatar_select(request: Request):
     {
         "avatar_id": "avatar_02",
         "status": "ok",
-        "message": "已切换为「小暖（备选）」"
+        "message": f"已切换为「{avatar['name']}」"
     }
     """
     body = await request.json()

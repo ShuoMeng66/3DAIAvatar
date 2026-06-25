@@ -1,79 +1,107 @@
-# ElderTalk — 虚拟真人陪聊系统
+# ElderTalk — 虚拟真人陪聊系统（颐语 / ElderTalk）
 
-面向独居/空巢老人的智能陪聊系统，基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) 数字人技术。
+面向独居/空巢老人的智能陪聊系统，基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) 动态数字人技术。
 
-**一句话**：一台电脑后台跑服务，老人在浏览器打开就能和数字人聊天。
+**仓库别名**：[3DAIAvatar](https://github.com/ShuoMeng66/3DAIAvatar)
+
+**一句话**：GPU 服务器跑 Linly 数字人引擎，浏览器打开即可与 WebRTC 动态数字人聊天；全息仓竖屏展示 2D 全身形象。
 
 ---
 
 ## 功能概览
 
-- 语音交互：老人通过语音与数字人自然对话，无需打字
-- 温暖陪伴：默认女性护工/孙辈形象，语气亲切温和
-- 日常陪聊：闲聊、情绪安抚、回忆往事、老歌话题
-- 用药提醒：定时提醒老人服药
-- 天气播报：每日天气预报
-- 全息展示：适配 3D LED 全息风扇屏，数字人跃然空中
-- 全双工打断：数字人说话时用户可开口打断
-- 声音克隆：上传家属录音 → 自动克隆 → 家人声音陪聊
-- 数字人定制：上传照片 + 录音 → 生成家人专属数字人
+- **动态数字人**：Linly MuseTalk WebRTC 实时视频 + 口型
+- 语音交互：老人通过语音与数字人自然对话
+- 2D 全息仓：竖屏 kiosk 展示（推荐 `VITE_CABINET_MODE=2d`）
+- 全双工打断、SSE 字幕同步、家属设置页
+- 声音克隆 / 数字人定制（扩展模块）
 
 ---
 
 ## 快速开始
 
-### 环境要求
-
-| 配置 | 最低（无数字人视频） | 推荐（含数字人视频） |
-|------|---------------------|-------------------|
-| 操作系统 | Ubuntu 22.04 / Windows 10+ | Ubuntu 22.04 / Windows 10+ |
-| CPU | 4 核 | 8 核 |
-| GPU | 不需要 | NVIDIA RTX 3060 12GB+ |
-| 内存 | 8GB | 32GB |
-| 磁盘 | 10GB | 50GB+ |
-| Python | 3.10+ | 3.10+ |
-| Node.js | 18+ | 18+ |
-
-### 一键部署（Linux）
+### Level 1 — 5 分钟验证（无 GPU，占位对话）
 
 ```bash
-# 1. 克隆项目
 git clone https://github.com/ShuoMeng66/3DAIAvatar.git
 cd 3DAIAvatar
 
-# 2. 配置 API Key（申请地址：https://bailian.console.aliyun.com）
 cp .env.example .env
-# 编辑 .env：填入 DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
+# 编辑 .env：填入 LLM_API_KEY
 
-# 3. 安装后端依赖
-cd backend
-pip install -r requirements.txt
+cd backend && pip install -r requirements.txt
+python -m uvicorn main:app --host 0.0.0.0 --port 8010
 
-# 4. 启动后端（后台运行）
-nohup python -m uvicorn main:app --host 0.0.0.0 --port 8010 > ../backend.log 2>&1 &
-
-# 5. 安装并启动前端
-cd ../frontend
-npm install
-nohup npm run dev -- --host 0.0.0.0 > ../frontend.log 2>&1 &
-
-# 6. 验证服务
-curl http://localhost:8010/api/v1/health
-curl http://localhost:5173 | head -5
+# 新终端
+cd frontend && npm install
+cp .env.example .env
+npm run dev -- --host 0.0.0.0
 ```
 
-### 访问
-
-- 本机浏览器打开 `http://localhost:5173`
-- 同局域网设备访问 `http://<服务器IP>:5173`
-- 远程访问需通过 frp/DDNS 暴露端口
-
-### 停止服务
+验证：
 
 ```bash
-pkill -f "uvicorn main:app"
-pkill -f "npm run dev"
+curl http://localhost:8010/health
 ```
+
+浏览器打开 `http://localhost:5173/#/chat`（无 Linly 时为占位回复 + 无视频）。
+
+### Level 2 — 动态数字人（AutoDL 推荐，约 30 分钟）
+
+**三进程模型**：Linly (8000) → Backend (8010) → Frontend (5173)
+
+1. 按 [docs/deploy/autodl.md](docs/deploy/autodl.md) 创建 AutoDL 实例并映射 **UDP 8000**
+2. 安装并启动 Linly：
+
+```bash
+cd third_party/Linly-Talker-Stream
+bash scripts/setup-env.sh musetalk
+sed -i 's/listenport: 8010/listenport: 8000/' config/config_musetalk.yaml
+uv run python src/server/app.py --config config/config_musetalk.yaml
+```
+
+3. 配置 `.env`：`LINLY_STREAM_URL=http://127.0.0.1:8000`
+4. 启动 backend + frontend（同 Level 1）
+5. 自检：
+
+```bash
+./scripts/check_webrtc.sh
+```
+
+6. 打开 `/#/chat`，约 10 秒内应看到数字人视频；发送文字后 avatar 在 WebRTC 流中说话（需 `linly_session_id` 绑定，已内置）。
+
+**远程 PC 访问 AutoDL**：浏览器直连 AutoDL 公网 URL；SSH 隧道**不能**传 WebRTC 视频（仅可传 API 8010）。
+
+### Level 3 — 全息仓 kiosk
+
+```bash
+# frontend/.env
+VITE_CABINET_MODE=2d
+VITE_KIOSK_CHROME=false
+```
+
+副屏 Chrome：
+
+```bash
+google-chrome --kiosk --window-position=1920,0 --window-size=1440,2560 \
+  --app=http://localhost:5173/#/cabinet
+```
+
+控制面板：`/#/hologram`
+
+---
+
+## 一键脚本
+
+```bash
+# Linux/macOS
+./scripts/start_all.sh
+
+# Windows
+.\scripts\start_all.ps1
+```
+
+仅启动 backend+frontend（不含 Linly）：`scripts/start_cabinet.sh` / `start_cabinet.ps1`
 
 ---
 
@@ -130,11 +158,11 @@ python backend/scripts/preprocess_avatar.py \
 
 ```bash
 cd third_party/Linly-Talker-Stream
-pip install -r requirements.txt
-python app.py --host 0.0.0.0 --port 8000
+bash scripts/setup-env.sh musetalk
+uv run python src/server/app.py --config config/config_musetalk.yaml
 ```
 
-然后按上面「快速开始」中的步骤启动后端和前端即可。前端自动连接数字人视频流。
+确保 `listenport: 8000`，且 `.env` 中 `LINLY_STREAM_URL=http://127.0.0.1:8000`。
 
 ---
 
@@ -158,7 +186,7 @@ cd backend && nohup python -m uvicorn main:app --host 0.0.0.0 --port 8010 > ../b
 cd ../frontend && nohup npm run dev -- --host 0.0.0.0 > ../frontend.log 2>&1 &
 
 # 验证
-sleep 5 && curl http://localhost:8010/api/v1/health
+sleep 5 && curl http://localhost:8010/health
 ```
 
 Windows 用户使用 `scripts/start_cabinet.ps1`。

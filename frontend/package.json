@@ -1,5 +1,5 @@
 {
-  "name": "xiaonuan-chat",
+  "name": "eldertalk-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test e2e/"
   },
   "dependencies": {
     "@pixiv/three-vrm": "^3.5.4",
@@ -27,6 +28,7 @@
     "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^6.0.2",
     "oxlint": "^1.69.0",
+    "@playwright/test": "^1.52.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.0"
   }

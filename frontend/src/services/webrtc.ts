@@ -2,10 +2,10 @@
  * WebRTC 服务层
  *
  * 建立与 Linly-Talker-Stream 的 WebRTC 连接，接收数字人视频流。
- * 信令通过后端 /api/v1/offer 代理。
+ * 信令通过后端 POST /offer 代理。
  */
 
-import { sendOffer } from './api';
+import { sendOffer, type OfferResponse } from './api';
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -14,6 +14,11 @@ const ICE_SERVERS: RTCConfiguration = {
 export interface WebRTCCallbacks {
   onRemoteStream: (stream: MediaStream) => void;
   onStateChange: (state: string) => void;
+  onSessionId?: (sessionId: number) => void;
+}
+
+export interface ConnectWebRTCResult {
+  sessionId?: number;
 }
 
 /**
@@ -23,54 +28,84 @@ export function createPeerConnection(): RTCPeerConnection {
   return new RTCPeerConnection(ICE_SERVERS);
 }
 
+function validateAnswer(answer: OfferResponse): void {
+  if (!answer.sdp || answer.type !== 'answer') {
+    throw new Error(
+      `Invalid SDP answer: missing sdp or type (got type=${answer.type ?? 'undefined'})`,
+    );
+  }
+}
+
+/**
+ * 绑定 MediaStream 到 video 元素并尝试播放
+ */
+export function bindStreamToVideo(
+  video: HTMLVideoElement,
+  stream: MediaStream,
+): void {
+  video.srcObject = stream;
+  void video.play().catch((err) => {
+    console.warn('[WebRTC] video.play() failed:', err);
+  });
+}
+
 /**
  * 建立 WebRTC 连接
  *
  * 流程：
- * 1. addTransceiver (audio + video, recvonly)
+ * 1. addTransceiver (audio + video, recvonly) — 与 Linly 官方 web 客户端一致
  * 2. createOffer → setLocalDescription
- * 3. POST /api/v1/offer → 后端代理到 Linly-Talker-Stream
- * 4. setRemoteDescription(answer)
+ * 3. POST /offer → 后端代理到 Linly-Talker-Stream
+ * 4. setRemoteDescription(answer) + 保存 sessionid
  * 5. ontrack → 绑定远程视频流
  */
 export async function connectWebRTC(
   pc: RTCPeerConnection,
   callbacks: WebRTCCallbacks,
-): Promise<void> {
-  const { onRemoteStream, onStateChange } = callbacks;
+): Promise<ConnectWebRTCResult> {
+  const { onRemoteStream, onStateChange, onSessionId } = callbacks;
+  let sessionId: number | undefined;
 
-  // 监听 ICE 连接状态
-  pc.oniceconnectionstatechange = () => {
-    onStateChange(pc.iceConnectionState);
-  };
+  try {
+    pc.oniceconnectionstatechange = () => {
+      onStateChange(pc.iceConnectionState);
+    };
 
-  // 监听连接状态
-  pc.onconnectionstatechange = () => {
-    onStateChange(pc.connectionState);
-  };
+    pc.onconnectionstatechange = () => {
+      onStateChange(pc.connectionState);
+    };
 
-  // 监听远程视频流
-  pc.ontrack = (event) => {
-    if (event.streams?.[0]) {
-      onRemoteStream(event.streams[0]);
+    pc.ontrack = (event) => {
+      if (event.streams?.[0]) {
+        onRemoteStream(event.streams[0]);
+      }
+    };
+
+    pc.addTransceiver('audio', { direction: 'recvonly' });
+    pc.addTransceiver('video', { direction: 'recvonly' });
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    console.debug('[WebRTC] sending offer...');
+    const answer = await sendOffer(offer.sdp ?? '', offer.type ?? 'offer');
+    validateAnswer(answer);
+
+    if (answer.sessionid != null) {
+      sessionId = answer.sessionid;
+      onSessionId?.(sessionId);
+      console.debug('[WebRTC] sessionid:', sessionId);
     }
-  };
 
-  // 添加接收器（仅接收，不发送）
-  pc.addTransceiver('audio', { direction: 'recvonly' });
-  pc.addTransceiver('video', { direction: 'recvonly' });
-
-  // 创建 SDP offer
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-
-  // 发送 offer 到后端信令代理
-  const answer = await sendOffer(offer.sdp ?? '', offer.type ?? 'offer');
-
-  if (answer.sdp && answer.type === 'answer') {
     await pc.setRemoteDescription(
       new RTCSessionDescription({ type: 'answer', sdp: answer.sdp }),
     );
+    console.debug('[WebRTC] answer received');
+
+    return { sessionId };
+  } catch (err) {
+    console.error('[WebRTC]', err);
+    throw err;
   }
 }
 
@@ -79,4 +114,11 @@ export async function connectWebRTC(
  */
 export function closeWebRTC(pc: RTCPeerConnection): void {
   pc.close();
+}
+
+/**
+ * ICE / 连接状态是否表示媒体通道已建立
+ */
+export function isMediaConnected(state: string): boolean {
+  return state === 'connected' || state === 'completed';
 }
