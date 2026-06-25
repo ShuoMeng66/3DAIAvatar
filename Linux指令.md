@@ -1,6 +1,6 @@
 # ElderTalk / 颐语 — Linux 服务器部署指令（AutoDL）
 
-> **照着做、逐步验收。** 本文只写「在哪里操作 → 命令 → 必须看到什么 → 失败怎么办」。  
+> **逐步验收。**   
 > 网络原理见 [docs/deploy/autodl.md](docs/deploy/autodl.md)；WebRTC 深度排查见 [docs/webrtc-troubleshooting.md](docs/webrtc-troubleshooting.md)。
 
 ---
