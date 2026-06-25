@@ -59,8 +59,8 @@ VITE_CABINET_MODE=2d
 
 ```bash
 cd /root/autodl-tmp
-git clone https://github.com/ShuoMeng66/3DAIAvatar.git
-cd 3DAIAvatar
+git clone https://github.com/ShuoMeng66/ElderTalk.git
+cd ElderTalk
 
 # Linly 环境
 cd third_party/Linly-Talker-Stream
@@ -69,7 +69,7 @@ bash scripts/download_musetalk_weights.sh
 sed -i 's/listenport: 8010/listenport: 8000/' config/config_musetalk.yaml
 
 # ElderTalk 后端
-cd /root/autodl-tmp/3DAIAvatar
+cd /root/autodl-tmp/ElderTalk
 cp .env.example .env
 # 编辑 .env 填入 LLM_API_KEY
 cd backend && pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
@@ -83,7 +83,7 @@ nohup uv run python src/server/app.py --config config/config_musetalk.yaml \
 for i in $(seq 1 12); do sleep 10; curl -sf http://localhost:8000/health && break; done
 
 # 启动 Backend（终端 2）
-cd /root/autodl-tmp/3DAIAvatar/backend
+cd /root/autodl-tmp/ElderTalk/backend
 nohup python -m uvicorn main:app --host 0.0.0.0 --port 8010 \
   > /root/autodl-tmp/backend.log 2>&1 &
 
@@ -116,5 +116,6 @@ POST /offer 是否 200？
 
 ## 相关文档
 
+- **[Linux指令.md](../../Linux指令.md)** — 服务器逐步命令（终端分工 + 验收）
 - [HOLOGRAM_CABINET.md](../../HOLOGRAM_CABINET.md) — 全息仓硬件与 kiosk
 - [docs/webrtc-troubleshooting.md](../webrtc-troubleshooting.md) — WebRTC 故障排查

@@ -60,6 +60,8 @@ curl http://localhost:8010/health
 
 **三进程模型**：Linly (8000) → Backend (8010) → Frontend (5173)
 
+> **逐步命令（推荐）：** 服务器上按 [Linux指令.md](Linux指令.md) 操作 — 含 AutoDL 控制台、Setup 终端、三个 SSH 终端分工与逐步验收，避免环境装乱。
+
 1. 按 [docs/deploy/autodl.md](docs/deploy/autodl.md) 创建 AutoDL 实例并映射 **UDP 8000**
 2. 安装并启动 Linly：
 
