@@ -2,7 +2,7 @@
 
 面向独居/空巢老人的智能陪聊系统，基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) 动态数字人技术。
 
-**仓库别名**：[3DAIAvatar](https://github.com/ShuoMeng66/3DAIAvatar)
+
 
 **一句话**：GPU 服务器跑 Linly 数字人引擎，浏览器打开即可与 WebRTC 动态数字人聊天；全息仓竖屏展示 2D 全身形象。
 
