@@ -4,10 +4,6 @@
 
 基于 [Linly-Talker-Stream](https://github.com/Kedreamix/Linly-Talker-Stream) MuseTalk 实时唇形同步 + 2D 全息仓竖屏展示。
 
-| | |
-|---|---|
-| **主仓库** | https://github.com/ShuoMeng66/ElderTalk |
-| **镜像仓库** | https://github.com/ShuoMeng66/3DAIAvatar （历史名称，与主仓库同步） |
 
 **一句话**：GPU 服务器运行 Linly 数字人引擎，浏览器打开即可与动态数字人 WebRTC 视频对话；副屏全息仓以 2D 全身形象 kiosk 展示。
 
