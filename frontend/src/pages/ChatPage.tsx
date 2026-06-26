@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import AvatarPlayer from '../components/AvatarPlayer';
 import SubtitleBar from '../components/SubtitleBar';
 import VoiceButton from '../components/VoiceButton';
 import ChatHistory from '../components/ChatHistory';
+import ConnectionStatus from '../components/ConnectionStatus';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useIdleTimer } from '../hooks/useIdleTimer';
 import { useConversationState, STATE_LABELS } from '../hooks/useConversationState';
@@ -10,7 +11,16 @@ import { useVAD } from '../hooks/useVAD';
 import { triggerInterrupt } from '../services/bargein';
 import { chatText, uploadAudio, healthCheckFull } from '../services/api';
 import { BRAND } from '../config/brand';
+import { API_BASE, USE_WEBRTC } from '../services/config';
 import { Send, Circle, RefreshCw } from 'lucide-react';
+
+function playSimpleAudio(audioRef: React.RefObject<HTMLAudioElement | null>, url: string) {
+  if (!audioRef.current || !url) return;
+  audioRef.current.src = url.startsWith('http') ? url : `${API_BASE}${url}`;
+  void audioRef.current.play().catch((err) => {
+    console.warn('[ChatPage] audio play failed:', err);
+  });
+}
 
 export default function ChatPage() {
   const [inputText, setInputText] = useState('');
@@ -29,6 +39,7 @@ export default function ChatPage() {
     backend: boolean;
     linly: boolean;
   } | null>(null);
+  const simpleAudioRef = useRef<HTMLAudioElement>(null);
 
   const convState = useConversationState();
   const {
@@ -36,12 +47,16 @@ export default function ChatPage() {
     connectionState,
     sessionId,
     iceState,
+    errorMessage,
     connect,
     disconnect,
   } = useWebRTC();
 
   const finishSpeakingAfter = useCallback(
-    (reply: string, linlyDriven: boolean) => {
+    (reply: string, linlyDriven: boolean, audioUrl?: string) => {
+      if (!USE_WEBRTC && audioUrl) {
+        playSimpleAudio(simpleAudioRef, audioUrl);
+      }
       const ms = linlyDriven
         ? Math.max(3000, reply.length * 120)
         : Math.max(1500, reply.length * 100);
@@ -53,16 +68,39 @@ export default function ChatPage() {
   const vad = useVAD({
     onSpeechStart: useCallback(() => {
       if (convState.isSpeaking) {
-        handleInterrupt();
+        convState.interrupt();
+        setSubtitle('好的，我听着呢');
+        if (USE_WEBRTC) {
+          void triggerInterrupt(sessionId ?? undefined);
+        }
+        if (simpleAudioRef.current) {
+          simpleAudioRef.current.pause();
+        }
+        convState.startListening();
       }
-    }, [convState.isSpeaking]),
+    }, [convState, sessionId]),
     onSpeechEnd: useCallback(() => {
       if (convState.state === 'LISTENING') {
         convState.finishListening();
         setSubtitle('嗯，让我想想...');
       }
-    }, [convState.state]),
+    }, [convState]),
   });
+
+  const handleInterrupt = useCallback(async () => {
+    convState.interrupt();
+    setSubtitle('好的，我听着呢');
+    if (USE_WEBRTC) {
+      await triggerInterrupt(sessionId ?? undefined);
+    }
+    if (simpleAudioRef.current) {
+      simpleAudioRef.current.pause();
+    }
+    convState.startListening();
+    if (!vad.isSupported) {
+      vad.start();
+    }
+  }, [convState, vad, sessionId]);
 
   useIdleTimer(() => {
     if (convState.state === 'IDLE') {
@@ -74,16 +112,6 @@ export default function ChatPage() {
       ]);
     }
   }, 30000);
-
-  const handleInterrupt = useCallback(async () => {
-    convState.interrupt();
-    setSubtitle('好的，我听着呢');
-    await triggerInterrupt(sessionId ?? undefined);
-    convState.startListening();
-    if (!vad.isSupported) {
-      vad.start();
-    }
-  }, [convState, vad, sessionId]);
 
   const handleSendText = useCallback(async () => {
     const text = inputText.trim();
@@ -103,7 +131,12 @@ export default function ChatPage() {
     setSubtitle('让我想想...');
 
     try {
-      const res = await chatText(text, 'default', undefined, sessionId);
+      const res = await chatText(
+        text,
+        'default',
+        undefined,
+        USE_WEBRTC ? sessionId : undefined,
+      );
       const reply = res.reply || '嗯，我听到了。';
 
       convState.startSpeaking();
@@ -113,7 +146,7 @@ export default function ChatPage() {
         { role: 'assistant', content: reply, time: new Date().toISOString() },
       ]);
 
-      finishSpeakingAfter(reply, Boolean(res.driven_by_linly));
+      finishSpeakingAfter(reply, Boolean(res.driven_by_linly), res.audio_url);
     } catch {
       setSubtitle('抱歉，网络不太好，请再说一次。');
       convState.reset();
@@ -143,7 +176,11 @@ export default function ChatPage() {
     async (audioBlob: Blob) => {
       setSubtitle('正在听...');
       try {
-        const res = await uploadAudio(audioBlob, 'default', sessionId);
+        const res = await uploadAudio(
+          audioBlob,
+          'default',
+          USE_WEBRTC ? sessionId : undefined,
+        );
         const reply = res.reply || '我听到了您的声音。';
 
         convState.startSpeaking();
@@ -153,7 +190,7 @@ export default function ChatPage() {
           { role: 'assistant', content: reply, time: new Date().toISOString() },
         ]);
 
-        finishSpeakingAfter(reply, Boolean(res.driven_by_linly));
+        finishSpeakingAfter(reply, Boolean(res.driven_by_linly), res.audio_url);
       } catch {
         setSubtitle('抱歉，没听清楚，请再说一次。');
         convState.reset();
@@ -172,7 +209,9 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    connect();
+    if (USE_WEBRTC) {
+      connect();
+    }
   }, [connect]);
 
   useEffect(() => {
@@ -181,58 +220,73 @@ export default function ChatPage() {
     return () => clearInterval(t);
   }, []);
 
+  const stateDotClass =
+    convState.state === 'LISTENING'
+      ? 'text-purple-success animate-pulse'
+      : convState.state === 'SPEAKING'
+        ? 'text-purple-primary animate-purple-pulse'
+        : convState.state === 'THINKING'
+          ? 'text-amber-500 animate-pulse'
+          : 'text-purple-text-muted';
+
+  const avatarConnectionState = USE_WEBRTC ? connectionState : 'ready';
+
   return (
     <div className="flex flex-col h-full">
+      <audio ref={simpleAudioRef} className="hidden" />
+
       <div className="flex items-center justify-center gap-2 py-2">
-        <Circle
-          size={12}
-          className={
-            convState.state === 'LISTENING'
-              ? 'text-green-500 animate-pulse'
-              : convState.state === 'SPEAKING'
-                ? 'text-orange-500'
-                : convState.state === 'THINKING'
-                  ? 'text-yellow-500 animate-pulse'
-                  : 'text-gray-400'
-          }
-          fill="currentColor"
-        />
-        <span className="text-lg font-medium text-warm-text-light">
+        <Circle size={12} className={stateDotClass} fill="currentColor" />
+        <span className="text-lg font-medium text-purple-text-muted">
           {STATE_LABELS[convState.state]}
         </span>
       </div>
 
       {serviceHealth && (
-        <div className="mx-4 mb-1 px-3 py-2 rounded-lg bg-black/5 text-xs text-warm-text-light flex flex-wrap gap-3 items-center">
-          <span>API {serviceHealth.backend ? '✓' : '✗'}</span>
-          <span>Linly {serviceHealth.linly ? '✓' : '✗'}</span>
-          <span>WebRTC {connectionState}</span>
-          {sessionId != null && <span>session {sessionId}</span>}
-          {iceState && <span>ICE {iceState}</span>}
-          {(connectionState === 'failed' || connectionState === 'idle') && (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 text-warm-primary"
-              onClick={() => {
-                disconnect();
-                connect();
-              }}
-            >
-              <RefreshCw size={12} /> 重连
-            </button>
+        <div className="mx-4 mb-1 px-3 py-2 rounded-xl glass-panel text-xs flex flex-wrap gap-3 items-center">
+          <ConnectionStatus backend={serviceHealth.backend} linly={serviceHealth.linly} />
+          {USE_WEBRTC && (
+            <>
+              <span className="text-purple-text-muted">WebRTC {connectionState}</span>
+              {sessionId != null && (
+                <span className="text-purple-text-muted">session {sessionId}</span>
+              )}
+              {iceState && <span className="text-purple-text-muted">ICE {iceState}</span>}
+              {errorMessage && (
+                <span className="text-purple-error w-full">{errorMessage}</span>
+              )}
+              {(connectionState === 'failed' || connectionState === 'idle') && (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-purple-primary"
+                  onClick={() => {
+                    disconnect();
+                    connect();
+                  }}
+                >
+                  <RefreshCw size={12} /> 重连
+                </button>
+              )}
+            </>
+          )}
+          {!USE_WEBRTC && (
+            <span className="text-purple-text-muted">简单模式（静态形象 + 语音）</span>
           )}
         </div>
       )}
 
       <div
-        className="flex-1 flex items-center justify-center bg-black rounded-2xl mx-4 mt-1 overflow-hidden"
+        className="flex-1 flex items-center justify-center rounded-3xl mx-4 mt-1 overflow-hidden ring-2 ring-purple-light/60 bg-avatar-stage"
         style={{ minHeight: '55%' }}
       >
         <AvatarPlayer
           videoRef={videoRef}
-          connectionState={connectionState}
+          connectionState={avatarConnectionState}
           iceState={iceState}
           sessionId={sessionId}
+          errorMessage={errorMessage}
+          simpleMode={!USE_WEBRTC}
+          isSpeaking={convState.state === 'SPEAKING'}
         />
       </div>
 
@@ -240,11 +294,11 @@ export default function ChatPage() {
         <SubtitleBar text={subtitle} />
       </div>
 
-      <div className="px-4 py-1 flex-shrink-0" style={{ maxHeight: '80px' }}>
+      <div className="px-4 py-1 flex-shrink-0" style={{ maxHeight: '120px' }}>
         <ChatHistory messages={messages.slice(-3)} />
       </div>
 
-      <div className="flex items-center gap-3 px-4 py-3 bg-white/80 backdrop-blur-sm border-t border-warm-border">
+      <div className="flex items-center gap-3 px-4 py-3 glass-panel border-t border-purple-border">
         <div className="flex-1 flex gap-2">
           <input
             className="input-large flex-1"

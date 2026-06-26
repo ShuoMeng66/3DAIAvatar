@@ -8,3 +8,5 @@
 export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8010';
 export const LINLY_PUBLIC_URL =
   import.meta.env.VITE_LINLY_PUBLIC_URL || '';
+/** 默认 true；设为 false 时使用静态图 + TTS audio_url 简单模式 */
+export const USE_WEBRTC = import.meta.env.VITE_USE_WEBRTC !== 'false';

@@ -2,6 +2,13 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { MessageCircle, Monitor, Home } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { BRAND } from '../config/brand';
+import AppLogo from './AppLogo';
+
+const NAV_ITEMS = [
+  { path: '/', icon: Home, label: '首页' },
+  { path: '/chat', icon: MessageCircle, label: '聊天' },
+  { path: '/hologram', icon: Monitor, label: '全息' },
+] as const;
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -34,17 +41,18 @@ export default function Layout() {
   }, [titlePressTimer]);
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-gradient-to-b from-warm-bg to-warm-bg-dark">
-      <header className="flex items-center justify-center h-16 px-4 bg-white/80 backdrop-blur-sm border-b border-warm-border flex-shrink-0">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-gradient-to-b from-purple-bg to-purple-bg-soft">
+      <header className="flex items-center justify-center h-16 px-4 glass-panel border-b border-purple-border flex-shrink-0">
         <button
           onClick={handleTitlePress}
-          className="text-2xl font-black text-warm-primary cursor-pointer select-none"
+          className="flex items-center gap-3 cursor-pointer select-none"
           aria-label={BRAND.cabinetTitle}
         >
-          {BRAND.nameZh}
-          <span className="text-base font-normal text-warm-text-light ml-2">
-            {BRAND.nameEn}
-          </span>
+          <div className="w-10 h-10 rounded-full gradient-purple flex items-center justify-center p-1.5">
+            <AppLogo size={28} />
+          </div>
+          <span className="text-2xl font-black text-purple-text">{BRAND.nameZh}</span>
+          <span className="text-base font-medium text-purple-light">{BRAND.nameEn}</span>
         </button>
       </header>
 
@@ -52,28 +60,25 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <nav className="flex items-center justify-around h-16 bg-white/80 backdrop-blur-sm border-t border-warm-border flex-shrink-0">
-        <button
-          onClick={() => navigate('/')}
-          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${isActive('/') ? 'text-warm-primary bg-warm-bg' : 'text-warm-text-light hover:text-warm-primary'}`}
-        >
-          <Home size={24} />
-          <span className="text-sm font-medium">首页</span>
-        </button>
-        <button
-          onClick={() => navigate('/chat')}
-          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${isActive('/chat') ? 'text-warm-primary bg-warm-bg' : 'text-warm-text-light hover:text-warm-primary'}`}
-        >
-          <MessageCircle size={28} />
-          <span className="text-base font-medium">聊天</span>
-        </button>
-        <button
-          onClick={() => navigate('/hologram')}
-          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${isActive('/hologram') ? 'text-warm-primary bg-warm-bg' : 'text-warm-text-light hover:text-warm-primary'}`}
-        >
-          <Monitor size={28} />
-          <span className="text-base font-medium">全息</span>
-        </button>
+      <nav className="flex items-center justify-around h-[72px] px-3 glass-panel border-t border-purple-border flex-shrink-0">
+        {NAV_ITEMS.map(({ path, icon: Icon, label }) => {
+          const active = isActive(path);
+          return (
+            <button
+              key={path}
+              onClick={() => navigate(path)}
+              className={[
+                'flex flex-col items-center gap-1 px-5 py-2 rounded-full transition-colors duration-200',
+                active
+                  ? 'bg-purple-primary text-white'
+                  : 'text-purple-text-muted hover:text-purple-primary',
+              ].join(' ')}
+            >
+              <Icon size={active && path === '/chat' ? 28 : 24} />
+              <span className="text-sm font-medium">{label}</span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );

@@ -13,7 +13,8 @@ const ICE_SERVERS: RTCConfiguration = {
 
 export interface WebRTCCallbacks {
   onRemoteStream: (stream: MediaStream) => void;
-  onStateChange: (state: string) => void;
+  onIceStateChange: (state: RTCIceConnectionState) => void;
+  onPeerConnectionStateChange?: (state: RTCPeerConnectionState) => void;
   onSessionId?: (sessionId: number) => void;
 }
 
@@ -63,16 +64,21 @@ export async function connectWebRTC(
   pc: RTCPeerConnection,
   callbacks: WebRTCCallbacks,
 ): Promise<ConnectWebRTCResult> {
-  const { onRemoteStream, onStateChange, onSessionId } = callbacks;
+  const {
+    onRemoteStream,
+    onIceStateChange,
+    onPeerConnectionStateChange,
+    onSessionId,
+  } = callbacks;
   let sessionId: number | undefined;
 
   try {
     pc.oniceconnectionstatechange = () => {
-      onStateChange(pc.iceConnectionState);
+      onIceStateChange(pc.iceConnectionState);
     };
 
     pc.onconnectionstatechange = () => {
-      onStateChange(pc.connectionState);
+      onPeerConnectionStateChange?.(pc.connectionState);
     };
 
     pc.ontrack = (event) => {
@@ -117,8 +123,13 @@ export function closeWebRTC(pc: RTCPeerConnection): void {
 }
 
 /**
- * ICE / 连接状态是否表示媒体通道已建立
+ * ICE 状态是否表示媒体通道已建立
  */
 export function isMediaConnected(state: string): boolean {
   return state === 'connected' || state === 'completed';
 }
+
+export const ICE_TIMEOUT_MS = 15000;
+
+export const ICE_TIMEOUT_MESSAGE =
+  '视频需要 AutoDL 8000 端口 UDP 公网映射，请使用公网 URL 访问';

@@ -1,9 +1,9 @@
 # 开发环境配置
 app:
-  listenport: 8010
+  listenport: 8000
   max_session: 1
 
-  ssl: true
+  ssl: false
   ssl_cert: ssl_certs/localhost.crt
   ssl_key: ssl_certs/localhost.key
   

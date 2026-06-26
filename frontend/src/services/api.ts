@@ -12,6 +12,7 @@ interface ChatResponse {
   linly_session_id?: number;
   status: string;
   driven_by_linly?: boolean;
+  audio_url?: string;
 }
 
 /**

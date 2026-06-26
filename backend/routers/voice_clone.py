@@ -12,7 +12,7 @@ from typing import Optional
 import tempfile
 import logging
 
-from ..voice_clone import get_clone_manager
+from voice_clone import get_clone_manager
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/voice", tags=["voice"])

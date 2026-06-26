@@ -1,16 +1,33 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
 
 @theme {
   --font-family-sans: 'Noto Sans SC', system-ui, sans-serif;
   --font-size-base: 20px;
-  --color-warm-bg: #FFF8F0;
-  --color-warm-bg-dark: #F5E6D3;
-  --color-warm-text: #3D2C0A;
-  --color-warm-text-light: #6B5A3E;
-  --color-warm-primary: #F59E0B;
-  --color-warm-primary-hover: #D97706;
-  --color-warm-rose: #FDF2F8;
-  --color-warm-border: #E5E0D8;
+
+  --color-purple-bg: #F5F0FF;
+  --color-purple-bg-soft: #EBE4FF;
+  --color-purple-primary: #6D28D9;
+  --color-purple-primary-hover: #5B21B6;
+  --color-purple-light: #A78BFA;
+  --color-purple-accent: #C4B5FD;
+  --color-purple-text: #1E1B4B;
+  --color-purple-text-muted: #5B5675;
+  --color-purple-border: #DDD6FE;
+  --color-purple-success: #059669;
+  --color-purple-error: #DC2626;
+  --color-cabinet-bg: #0A0612;
+  --color-avatar-stage: #0F0A1A;
+
+  /* warm-* 别名 → purple（迁移期） */
+  --color-warm-bg: var(--color-purple-bg);
+  --color-warm-bg-dark: var(--color-purple-bg-soft);
+  --color-warm-text: var(--color-purple-text);
+  --color-warm-text-light: var(--color-purple-text-muted);
+  --color-warm-primary: var(--color-purple-primary);
+  --color-warm-primary-hover: var(--color-purple-primary-hover);
+  --color-warm-rose: #FDF4FF;
+  --color-warm-border: var(--color-purple-border);
 }
 
 * {
@@ -21,13 +38,23 @@ body {
   margin: 0;
   font-family: 'Noto Sans SC', system-ui, sans-serif;
   font-size: 20px;
-  background: linear-gradient(180deg, #FFF8F0 0%, #F5E6D3 100%);
-  color: #3D2C0A;
+  background: linear-gradient(165deg, #F5F0FF 0%, #EBE4FF 45%, #FDF4FF 100%);
+  color: #1E1B4B;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
-/* 大字按钮基础样式 */
+.gradient-purple {
+  background: linear-gradient(135deg, #6D28D9 0%, #7C3AED 50%, #A78BFA 100%);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-purple-border);
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -38,33 +65,74 @@ body {
   font-weight: 700;
   border-radius: 16px;
   border: none;
-  background: #F59E0B;
+  background: var(--color-purple-primary);
   color: white;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.2s;
 }
-.btn-primary:hover { background: #D97706; }
-.btn-primary:active { background: #B45309; transform: scale(0.98); }
+.btn-primary:hover { background: var(--color-purple-primary-hover); }
+.btn-primary:active { background: #5B21B6; transform: scale(0.98); }
 
-/* 大字输入框 */
 .input-large {
   width: 100%;
   min-height: 64px;
   padding: 16px 20px;
   font-size: 22px;
-  border: 2px solid #E5E0D8;
+  border: 2px solid var(--color-purple-border);
   border-radius: 16px;
   background: white;
-  color: #3D2C0A;
+  color: var(--color-purple-text);
   outline: none;
   font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.input-large:focus { border-color: #F59E0B; }
+.input-large:focus {
+  border-color: var(--color-purple-primary);
+  box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.15);
+}
 
-/* 字幕样式 */
 .subtitle-text {
   font-size: 28px;
   font-weight: 700;
   line-height: 1.4;
   text-align: center;
+}
+
+@keyframes purple-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes purple-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(167, 139, 250, 0.3); }
+  50% { box-shadow: 0 0 36px rgba(167, 139, 250, 0.55); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.animate-purple-pulse {
+  animation: purple-pulse 2s ease-in-out infinite;
+}
+
+.animate-purple-glow {
+  animation: purple-glow 2s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-purple-pulse,
+  .animate-purple-glow,
+  .animate-breathe,
+  .animate-pulse {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }

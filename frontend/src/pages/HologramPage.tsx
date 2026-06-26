@@ -5,16 +5,18 @@
 import { useEffect, useState } from 'react';
 import { healthCheckFull } from '../services/api';
 import { BRAND } from '../config/brand';
+import ConnectionStatus from '../components/ConnectionStatus';
+import { Button } from '../components/ui';
 import '../styles/hologram.css';
 
 const KIOSK_COMMAND = `chrome.exe --kiosk --window-position=1920,0 --window-size=1440,2560 --app=http://localhost:5173/#/cabinet`;
 
 const DEPLOY_STEPS = [
-  'AutoDL 选 PyTorch 2.1 + Python 3.10，映射端口 8000/8010/5173',
+  'AutoDL 个人用户：使用 6006/6008 公网端口（configure_pc_access.sh personal）',
   '安装 Linly：third_party/Linly-Talker-Stream/scripts/setup-env.sh',
   '配置 .env：LLM_API_KEY、LINLY_STREAM_URL=http://127.0.0.1:8000',
-  '启动 Linly → backend → frontend（见 docs/deploy/autodl.md）',
-  '运行 scripts/check_webrtc.sh 验证信令与 UDP',
+  '启动 Linly → backend → frontend',
+  '运行 scripts/check_webrtc.sh 验证信令',
   '副屏 Chrome kiosk 打开 /#/cabinet（VITE_CABINET_MODE=2d）',
 ];
 
@@ -54,35 +56,32 @@ export default function HologramPage() {
 
       {health && (
         <div className="hologram-status">
-          <span className={health.backend ? 'ok' : 'err'}>
-            API {health.backend ? '正常' : '离线'}
-          </span>
-          <span className={health.linly ? 'ok' : 'err'}>
-            Linly {health.linly ? '正常' : '离线'}
-          </span>
+          <ConnectionStatus backend={health.backend} linly={health.linly} />
         </div>
       )}
 
       <section className="hologram-wizard">
-        <h2>AutoDL 部署步骤</h2>
+        <h2>部署步骤</h2>
         <ol>
           {DEPLOY_STEPS.map((step) => (
             <li key={step}>{step}</li>
           ))}
         </ol>
         <p className="hologram-note">
-          offer 200 无画面 = 信令 OK、UDP 未通。详见 docs/deploy/autodl.md
+          offer 200 无画面 = 信令 OK、UDP 未通。个人用户可用 VITE_USE_WEBRTC=false 简单模式。
         </p>
       </section>
 
       <div className="hologram-actions">
-        <button type="button" onClick={handleOpenCabinet}>
+        <Button variant="primary" fullWidth onClick={handleOpenCabinet}>
           新窗口打开展示页
-        </button>
-        <button type="button" onClick={handleCopyCommand}>
+        </Button>
+        <Button variant="outline" fullWidth onClick={handleCopyCommand}>
           复制副屏启动命令
-        </button>
+        </Button>
       </div>
+
+      <pre className="hologram-code">{KIOSK_COMMAND}</pre>
 
       <div className="hologram-preview">
         <div className="hologram-preview-col">

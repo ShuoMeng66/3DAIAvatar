@@ -21,6 +21,11 @@ from routers import (
 )
 
 import httpx
+import logging
+
+from services.sdp_rewrite import rewrite_sdp_ice
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="ElderTalk API", version="0.2.0")
 
@@ -100,6 +105,24 @@ async def webrtc_offer(request: Request):
                 "status": "invalid_answer",
                 "detail": data,
             },
+        )
+
+    public_host = settings.LINLY_ICE_PUBLIC_HOST.strip()
+    if public_host:
+        data["sdp"] = rewrite_sdp_ice(
+            data["sdp"],
+            public_host,
+            settings.LINLY_ICE_PUBLIC_PORT,
+        )
+        logger.info(
+            "Rewrote SDP ICE candidates to %s:%s",
+            public_host,
+            settings.LINLY_ICE_PUBLIC_PORT,
+        )
+    else:
+        logger.warning(
+            "LINLY_ICE_PUBLIC_HOST unset — SDP ICE candidates not rewritten; "
+            "remote browsers may fail to connect video"
         )
 
     return JSONResponse(content=data, status_code=200)

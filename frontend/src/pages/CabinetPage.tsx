@@ -131,6 +131,7 @@ export default function CabinetPage() {
         <header className="cabinet-header">
           <span className="cabinet-header-title">{BRAND.cabinetTitle}</span>
           <span className="cabinet-header-status">
+            {connected && <span className="cabinet-header-status-dot" aria-hidden />}
             {connected ? '已连接' : '未连接'}
           </span>
         </header>

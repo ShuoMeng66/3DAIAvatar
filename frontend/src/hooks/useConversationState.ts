@@ -58,11 +58,11 @@ export const STATE_LABELS: Record<ConversationState, string> = {
 
 // 状态对应的按钮样式
 export const STATE_BUTTON_CLASSES: Record<ConversationState, string> = {
-  IDLE: 'bg-warm-primary hover:bg-warm-primary-hover',
+  IDLE: 'bg-purple-primary hover:bg-purple-primary-hover',
   LISTENING: 'bg-red-500 scale-110 shadow-lg shadow-red-300 animate-pulse',
-  THINKING: 'bg-yellow-500',
-  SPEAKING: 'bg-warm-primary opacity-60',
-  INTERRUPTING: 'bg-yellow-400',
+  THINKING: 'bg-amber-500',
+  SPEAKING: 'bg-purple-primary opacity-60',
+  INTERRUPTING: 'bg-amber-400',
 };
 
 interface UseConversationStateReturn {

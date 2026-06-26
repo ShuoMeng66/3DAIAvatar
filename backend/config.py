@@ -50,6 +50,8 @@ class Settings:
         "LINLY_STREAM_URL",
         "http://127.0.0.1:8000",
     )
+    LINLY_ICE_PUBLIC_HOST: str = os.getenv("LINLY_ICE_PUBLIC_HOST", "")
+    LINLY_ICE_PUBLIC_PORT: int = int(os.getenv("LINLY_ICE_PUBLIC_PORT", "8000"))
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
     WEATHER_API_KEY: str = os.getenv("WEATHER_API_KEY", "")

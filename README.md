@@ -21,6 +21,7 @@
 
 | 文档 | 说明 |
 |------|------|
+| [docs/deploy/windows-local.md](docs/deploy/windows-local.md) | **Windows 本地一体机部署（WebRTC 演示推荐）** |
 | [docs/deploy/autodl.md](docs/deploy/autodl.md) | AutoDL 部署（含 UDP 8000 映射） |
 | [docs/webrtc-troubleshooting.md](docs/webrtc-troubleshooting.md) | offer 200 无画面排查 |
 | [HOLOGRAM_CABINET.md](HOLOGRAM_CABINET.md) | 全息仓硬件与双屏 kiosk |

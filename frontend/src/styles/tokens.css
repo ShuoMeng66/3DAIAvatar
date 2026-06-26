@@ -1,0 +1,21 @@
+/**
+ * Purple Elder Companion — 设计 tokens（粉紫柔感）
+ */
+:root {
+  --color-purple-bg: #F5F0FF;
+  --color-purple-bg-soft: #EBE4FF;
+  --color-purple-bg-card: rgba(255, 255, 255, 0.92);
+  --color-purple-primary: #6D28D9;
+  --color-purple-primary-hover: #5B21B6;
+  --color-purple-light: #A78BFA;
+  --color-purple-accent: #C4B5FD;
+  --color-purple-text: #1E1B4B;
+  --color-purple-text-muted: #5B5675;
+  --color-purple-border: #DDD6FE;
+  --color-purple-success: #059669;
+  --color-purple-error: #DC2626;
+  --color-cabinet-bg: #0A0612;
+  --color-avatar-stage: #0F0A1A;
+  --shadow-purple-card: 0 8px 32px rgba(109, 40, 217, 0.08);
+  --shadow-purple-button: 0 4px 14px rgba(109, 40, 217, 0.25);
+}

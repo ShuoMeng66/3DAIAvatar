@@ -5,6 +5,7 @@ import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 import HologramPage from './pages/HologramPage';
 import CabinetPage from './pages/CabinetPage';
+import UiPreviewPage from './pages/UiPreviewPage';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="chat" element={<ChatPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="hologram" element={<HologramPage />} />
+          <Route path="ui-preview" element={<UiPreviewPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

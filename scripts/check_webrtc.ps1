@@ -20,11 +20,16 @@ try {
 }
 
 try {
-    Invoke-RestMethod -Uri "$LINLY_URL/health" -TimeoutSec 3 | Out-Null
+    Invoke-RestMethod -Uri "$LINLY_URL/health" -TimeoutSec 3 -SkipCertificateCheck | Out-Null
     Write-Host "[OK] Linly /health" -ForegroundColor Green
 } catch {
-    Write-Host "[FAIL] Linly /health" -ForegroundColor Red
-    $fail = 1
+    try {
+        Invoke-RestMethod -Uri "https://127.0.0.1:8000/health" -TimeoutSec 3 -SkipCertificateCheck | Out-Null
+        Write-Host "[OK] Linly /health (HTTPS)" -ForegroundColor Green
+    } catch {
+        Write-Host "[FAIL] Linly /health — 请先启动 Linly (port 8000)" -ForegroundColor Red
+        $fail = 1
+    }
 }
 
 try {
@@ -36,7 +41,7 @@ try {
 
 Write-Host ""
 if ($fail -eq 0) {
-    Write-Host "信令层就绪。若浏览器仍无画面，请检查 AutoDL UDP 8000 映射。" -ForegroundColor Green
+    Write-Host "信令层就绪。本地一体机请打开 http://localhost:5173/#/chat" -ForegroundColor Green
     exit 0
 } else {
     Write-Host "自检未通过" -ForegroundColor Red

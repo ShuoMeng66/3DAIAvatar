@@ -197,7 +197,7 @@ cosyvoice = CosyVoice("pretrained_models/CosyVoice-300M")
 
 # 生成克隆声音
 output = cosyvoice.inference_zero_shot(
-    "你好，我是小暖，今天过得怎么样？",
+    "你好，我是颐语，今天过得怎么样？",
     "希望你以后能够做的比我还好呦。",  # 参考文本
     "{ref_path}",                         # 参考音频
 )
@@ -283,7 +283,7 @@ python GPT-SoVITS/train.py \\
 # 3. 测试生成
 python GPT-SoVITS/inference.py \\
     --model "{voice_dir}/model" \\
-    --text "你好，我是小暖，今天过得怎么样？" \\
+    --text "你好，我是颐语，今天过得怎么样？" \\
     --output "{voice_dir}/sample.wav"
 """
 
