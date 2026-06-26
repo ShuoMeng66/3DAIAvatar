@@ -2,7 +2,7 @@ import { Button, Card, Badge, Input } from '../components/ui';
 
 export default function UiPreviewPage() {
   return (
-    <div className="overflow-y-auto h-full px-4 py-6 space-y-8">
+    <div className="min-h-full px-4 py-6 pb-8 space-y-8">
       <h1 className="text-3xl font-black text-purple-text">UI 组件预览</h1>
       <p className="text-purple-text-muted text-lg">Purple Elder Companion 设计系统</p>
 

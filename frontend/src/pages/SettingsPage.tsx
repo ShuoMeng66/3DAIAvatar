@@ -115,7 +115,7 @@ export default function SettingsPage() {
 
   if (!authenticated) {
     return (
-      <div className="flex flex-col items-center justify-center h-full px-8">
+      <div className="flex flex-col items-center justify-center min-h-full px-8 py-8">
         <Card className="w-full max-w-md overflow-hidden !p-0">
           <div className="h-1 gradient-purple" />
           <div className="p-6">
@@ -148,7 +148,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="overflow-y-auto h-full px-4 py-4 space-y-6 pb-24">
+    <div className="min-h-full px-4 py-4 space-y-6 pb-28">
       <h2 className="text-2xl font-bold text-center text-purple-text">家属设置</h2>
       {toast && (
         <div className="text-center py-2 px-4 rounded-xl bg-purple-accent/50 text-purple-text text-lg">

@@ -232,7 +232,7 @@ export default function ChatPage() {
   const avatarConnectionState = USE_WEBRTC ? connectionState : 'ready';
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col min-h-full">
       <audio ref={simpleAudioRef} className="hidden" />
 
       <div className="flex items-center justify-center gap-2 py-2">
@@ -275,10 +275,7 @@ export default function ChatPage() {
         </div>
       )}
 
-      <div
-        className="flex-1 flex items-center justify-center rounded-3xl mx-4 mt-1 overflow-hidden ring-2 ring-purple-light/60 bg-avatar-stage"
-        style={{ minHeight: '55%' }}
-      >
+      <div className="flex-1 min-h-0 flex items-center justify-center rounded-3xl mx-4 mt-1 overflow-hidden ring-2 ring-purple-light/60 bg-avatar-stage">
         <AvatarPlayer
           videoRef={videoRef}
           connectionState={avatarConnectionState}
@@ -294,11 +291,11 @@ export default function ChatPage() {
         <SubtitleBar text={subtitle} />
       </div>
 
-      <div className="px-4 py-1 flex-shrink-0" style={{ maxHeight: '120px' }}>
+      <div className="px-4 py-1 flex-shrink-0 max-h-[120px] overflow-y-auto">
         <ChatHistory messages={messages.slice(-3)} />
       </div>
 
-      <div className="flex items-center gap-3 px-4 py-3 glass-panel border-t border-purple-border">
+      <div className="flex items-center gap-3 px-4 py-3 glass-panel border-t border-purple-border flex-shrink-0">
         <div className="flex-1 flex gap-2">
           <input
             className="input-large flex-1"

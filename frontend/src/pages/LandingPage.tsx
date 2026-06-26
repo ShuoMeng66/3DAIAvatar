@@ -1,19 +1,42 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, Monitor, Sparkles } from 'lucide-react';
+import { MessageCircle, Monitor, Sparkles, ChevronRight } from 'lucide-react';
 import { BRAND } from '../config/brand';
-import { Button, Card } from '../components/ui';
+import { Button } from '../components/ui';
 
 const FEATURES = [
-  { icon: MessageCircle, title: '语音陪聊', desc: '按住说话，自然对话' },
-  { icon: Monitor, title: '全息展示', desc: '2D 竖屏全息仓模式' },
-  { icon: Sparkles, title: '温暖智伴', desc: '大字幕、大按钮、易上手' },
+  {
+    icon: MessageCircle,
+    title: '语音陪聊',
+    desc: '按住说话，自然对话',
+    path: '/chat',
+  },
+  {
+    icon: Monitor,
+    title: '全息展示',
+    desc: '2D 竖屏全息仓模式',
+    path: '/hologram',
+  },
+  {
+    icon: Sparkles,
+    title: '温暖智伴',
+    desc: '大字幕、大按钮、易上手',
+    path: '/chat',
+  },
 ] as const;
+
+const CARD_INTERACTION =
+  'transition-all duration-200 active:scale-[0.98] hover:shadow-lg hover:border-purple-light cursor-pointer tap-scale';
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
+  const goChat = useCallback(() => {
+    window.setTimeout(() => navigate('/chat'), 150);
+  }, [navigate]);
+
   return (
-    <div className="relative flex flex-col h-full px-6 py-8 justify-center overflow-hidden">
+    <div className="relative flex flex-col min-h-full px-6 py-6 pb-8 pt-4">
       <div
         className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-purple-400/20 blur-3xl pointer-events-none"
         aria-hidden
@@ -38,24 +61,39 @@ export default function LandingPage() {
       </p>
 
       <div className="space-y-3 mb-10 relative z-10">
-        {FEATURES.map(({ icon: Icon, title, desc }) => (
-          <Card key={title} padding="sm" className="flex items-center gap-4">
+        {FEATURES.map(({ icon: Icon, title, desc, path }) => (
+          <button
+            key={title}
+            type="button"
+            onClick={() => navigate(path)}
+            className={[
+              'w-full text-left rounded-2xl border border-purple-border bg-white/92',
+              'shadow-[var(--shadow-purple-card)] p-4 flex items-center gap-4',
+              CARD_INTERACTION,
+            ].join(' ')}
+          >
             <div className="w-12 h-12 rounded-xl bg-purple-accent/40 flex items-center justify-center flex-shrink-0">
               <Icon size={28} className="text-purple-primary" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-lg font-bold text-purple-text">{title}</p>
               <p className="text-base text-purple-text-muted">{desc}</p>
             </div>
-          </Card>
+            <ChevronRight size={24} className="text-purple-light flex-shrink-0" />
+          </button>
         ))}
       </div>
 
-      <div className="relative z-10 space-y-3">
-        <Button variant="primary" fullWidth onClick={() => navigate('/chat')}>
+      <div className="relative z-10 space-y-3 pb-4">
+        <Button variant="primary" fullWidth className="tap-scale active:scale-[0.98]" onClick={goChat}>
           开始聊天
         </Button>
-        <Button variant="outline" fullWidth onClick={() => navigate('/hologram')}>
+        <Button
+          variant="outline"
+          fullWidth
+          className="tap-scale active:scale-[0.98]"
+          onClick={() => navigate('/hologram')}
+        >
           全息仓部署
         </Button>
       </div>

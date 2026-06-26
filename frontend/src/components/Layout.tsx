@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { MessageCircle, Monitor, Home } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { BRAND } from '../config/brand';
 import AppLogo from './AppLogo';
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
   const [_titlePressCount, setTitlePressCount] = useState(0);
   const [titlePressTimer, setTitlePressTimer] = useState<ReturnType<
     typeof setTimeout
@@ -33,6 +34,10 @@ export default function Layout() {
     const timer = setTimeout(() => setTitlePressCount(0), 2000);
     setTitlePressTimer(timer);
   }, [navigate, titlePressTimer]);
+
+  useEffect(() => {
+    mainRef.current?.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     return () => {
@@ -56,8 +61,13 @@ export default function Layout() {
         </button>
       </header>
 
-      <main className="flex-1 overflow-hidden">
-        <Outlet />
+      <main
+        ref={mainRef}
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain scroll-main"
+      >
+        <div key={location.pathname} className="route-fade min-h-full">
+          <Outlet />
+        </div>
       </main>
 
       <nav className="flex items-center justify-around h-[72px] px-3 glass-panel border-t border-purple-border flex-shrink-0">
@@ -68,14 +78,17 @@ export default function Layout() {
               key={path}
               onClick={() => navigate(path)}
               className={[
-                'flex flex-col items-center gap-1 px-5 py-2 rounded-full transition-colors duration-200',
+                'flex flex-col items-center justify-center gap-1 min-w-[48px] min-h-[48px] px-5 py-2 rounded-full',
+                'transition-all duration-200 tap-scale',
                 active
-                  ? 'bg-purple-primary text-white'
-                  : 'text-purple-text-muted hover:text-purple-primary',
+                  ? 'bg-purple-primary text-white scale-105 font-semibold shadow-[var(--shadow-purple-button)]'
+                  : 'text-purple-text-muted hover:text-purple-primary hover:bg-purple-accent/30',
               ].join(' ')}
             >
               <Icon size={active && path === '/chat' ? 28 : 24} />
-              <span className="text-sm font-medium">{label}</span>
+              <span className={`text-sm ${active ? 'font-semibold' : 'font-medium'}`}>
+                {label}
+              </span>
             </button>
           );
         })}

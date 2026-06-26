@@ -33,7 +33,7 @@ export default function Button({
       className={[
         'inline-flex items-center justify-center gap-2',
         'min-h-[64px] px-8 text-[22px] font-bold rounded-2xl',
-        'transition-all duration-200',
+        'transition-all duration-200 active:scale-[0.98] tap-scale',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         variantClasses[variant],
         fullWidth ? 'w-full' : '',

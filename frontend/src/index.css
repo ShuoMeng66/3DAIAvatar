@@ -125,12 +125,34 @@ body {
   animation: breathe 3s ease-in-out infinite;
 }
 
+.tap-scale:active {
+  transform: scale(0.98);
+}
+
+.scroll-main {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+@keyframes route-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.route-fade {
+  animation: route-fade-in 150ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-purple-pulse,
   .animate-purple-glow,
   .animate-breathe,
-  .animate-pulse {
+  .animate-pulse,
+  .route-fade {
     animation: none !important;
+  }
+  .tap-scale:active {
+    transform: none;
   }
   * {
     transition-duration: 0.01ms !important;
